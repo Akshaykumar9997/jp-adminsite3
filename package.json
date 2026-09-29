@@ -6,9 +6,15 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
+    "typecheck": "tsc -b --pretty false",
+    "test": "node scripts/verify-showcase-package.mjs",
+    "test:database": "node scripts/test-showcase-database.mjs",
+    "test:edge": "npx -y deno@2.5.2 test --allow-env supabase/functions/public-showcase-media/index_test.ts",
+    "storage:plan": "node scripts/manage-showcase-bucket.mjs",
     "preview": "vite preview"
   },
   "dependencies": {
+    "@supabase/supabase-js": "2.117.2",
     "lucide-react": "^1.48.0",
     "react": "^19.3.0",
     "react-dom": "^19.3.0",
@@ -17,6 +23,7 @@
   "devDependencies": {
     "@types/react": "^19.3.0",
     "@types/react-dom": "^19.3.0",
+    "@electric-sql/pglite": "0.3.14",
     "@vitejs/plugin-react": "^6.1.1",
     "typescript": "^7.0.2",
     "vite": "^8.3.1"

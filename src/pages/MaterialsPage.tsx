@@ -1,77 +1,48 @@
 import { Eye, Grid2X2, Layers, List, Plus, Search, Shapes, Wrench } from 'lucide-react'
 import { useMemo, useState } from 'react'
-import { materials } from '../data/adminMockData'
 import { SafeImage } from '../components/SafeImage'
-import { Button, MetricCard, PlaceholderDialog, StatusBadge } from '../components/ui'
+import { Button, MetricCard, StatusBadge } from '../components/ui'
+import { AsyncForm, CmsDialog, ErrorState, LoadingState, StatusField } from '../components/CmsDialog'
+import { useAsyncData } from '../hooks/useAsyncData'
+import { deleteMaterial, deleteMaterialCollection, listMaterialCollections, listMaterials, saveMaterial, saveMaterialCollection } from '../lib/showcase'
+import type { ContentStatus, Json, Material, MaterialCollection, MaterialRange } from '../lib/database.types'
 
-type Range = 'All Materials' | 'Cap Range' | 'Mid Cap' | 'Low Cap'
 type View = 'grid' | 'list'
+type Dialog = { type: 'material'; item?: Material } | { type: 'collection'; item?: MaterialCollection }
+const value = (form: FormData, key: string) => String(form.get(key) ?? '').trim()
+const slugify = (text: string) => text.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')
+const rangeLabel = (range: MaterialRange) => range === 'mid_cap' ? 'Mid Cap' : range === 'low_cap' ? 'Low Cap' : 'Cap Range'
+
+async function loadMaterials() {
+  const [materials, collections] = await Promise.all([listMaterials(), listMaterialCollections()])
+  return { materials, collections }
+}
 
 export function MaterialsPage() {
-  const [range, setRange] = useState<Range>('All Materials')
+  const { data, error, loading, reload } = useAsyncData(loadMaterials)
+  const [range, setRange] = useState('all')
   const [query, setQuery] = useState('')
   const [category, setCategory] = useState('All')
-  const [finish, setFinish] = useState('All')
   const [status, setStatus] = useState('All')
   const [view, setView] = useState<View>('grid')
-  const [selectedId, setSelectedId] = useState(1)
-  const [portalVisible, setPortalVisible] = useState(true)
-  const [dialog, setDialog] = useState<string | null>(null)
+  const [selectedId, setSelectedId] = useState<string | null>(null)
+  const [dialog, setDialog] = useState<Dialog | null>(null)
+  const materials = data?.materials ?? []
+  const collections = data?.collections ?? []
+  const selected = materials.find((item) => item.id === selectedId) ?? materials[0]
+  const selectedCollection = selected ? collections.find((item) => item.id === selected.collection_id) : undefined
+  const filtered = useMemo(() => { const normalized = query.trim().toLowerCase(); return materials.filter((item) => (range === 'all' || collections.find((collection) => collection.id === item.collection_id)?.range === range) && (category === 'All' || item.category === category) && (status === 'All' || item.status === status) && (!normalized || `${item.code} ${item.name} ${item.category}`.toLowerCase().includes(normalized))) }, [category, collections, materials, query, range, status])
+  const close = () => { setDialog(null); void reload() }
 
-  const filtered = useMemo(() => {
-    const normalized = query.trim().toLowerCase()
-    return materials.filter((material) =>
-      (range === 'All Materials' || material.range === range) &&
-      (category === 'All' || material.category === category) &&
-      (finish === 'All' || material.finish === finish) &&
-      (status === 'All' || material.status === status) &&
-      (!normalized || `${material.code} ${material.name} ${material.category}`.toLowerCase().includes(normalized)),
-    )
-  }, [category, finish, query, range, status])
-  const selected = materials.find((material) => material.id === selectedId) ?? materials[0]
+  return <div className="page cms-page">
+    <div className="breadcrumbs">CMS Master Index <span>/</span> Materials &amp; Finishes</div>
+    <div className="page-heading"><div><h1>Materials &amp; Finishes</h1><p>Manage material collections, technical specifications, finishes, and public visibility.</p></div><div className="page-heading__actions"><Button icon={<Plus size={15} />} onClick={() => setDialog({ type: 'collection' })}>Add Material Range</Button><Button variant="primary" icon={<Plus size={15} />} onClick={() => setDialog({ type: 'material' })}>Add Material</Button></div></div>
+    <section className="metrics cms-metrics" aria-label="Material summary"><MetricCard label="Total Materials" value={String(materials.length)} note="Catalogued" icon={<Shapes size={17} />} /><MetricCard label="Material Ranges" value={String(collections.length)} note="Collections" icon={<Layers size={17} />} /><MetricCard label="Published Finishes" value={String(materials.filter((item) => item.status === 'published').length)} note="Public" icon={<Eye size={17} />} /><MetricCard label="Archived" value={String(materials.filter((item) => item.status === 'archived').length)} note="Retained records" icon={<Wrench size={17} />} /></section>
+    <div className="tabs" role="tablist" aria-label="Material range"><button className={range === 'all' ? 'active' : ''} onClick={() => setRange('all')}>All Materials</button>{(['cap', 'mid_cap', 'low_cap'] as MaterialRange[]).map((item) => <button key={item} className={range === item ? 'active' : ''} onClick={() => setRange(item)}>{rangeLabel(item)}</button>)}</div>
+    <div className="cms-toolbar cms-toolbar--wrap"><label className="filter-search"><Search size={16} /><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search material code, finish, profile..." aria-label="Search materials" /></label><label className="select-control"><select value={category} onChange={(event) => setCategory(event.target.value)}><option value="All">All Types</option>{[...new Set(materials.map((item) => item.category))].map((item) => <option key={item}>{item}</option>)}</select></label><label className="select-control"><select value={status} onChange={(event) => setStatus(event.target.value)}><option value="All">All Visibility</option><option value="published">Published</option><option value="draft">Draft</option><option value="archived">Archived</option></select></label><div className="view-toggle"><button className={view === 'grid' ? 'active' : ''} onClick={() => setView('grid')}><Grid2X2 size={17} /></button><button className={view === 'list' ? 'active' : ''} onClick={() => setView('list')}><List size={18} /></button></div></div>
+    {loading ? <LoadingState /> : error ? <ErrorState message={error} retry={() => void reload()} /> : !selected ? <div className="empty-state"><h2>No materials yet</h2><p>Create a material range, then add the first material.</p></div> : <div className="split-workspace"><section className={`material-grid material-grid--${view}`}>{filtered.map((item) => { const collection = collections.find((entry) => entry.id === item.collection_id); return <button key={item.id} className={`material-card ${selected.id === item.id ? 'selected' : ''}`} onClick={() => setSelectedId(item.id)}><div className="material-card__media"><SafeImage src="/assets/project-03.jpg" alt={item.name} /><span>{collection ? rangeLabel(collection.range) : 'Unclassified'}</span><StatusBadge status={item.status} /></div><div className="material-card__body"><small>{item.code} • {item.category}</small><h3>{item.name}</h3><p>{item.description || 'No description'}</p><footer>{item.finish || 'Finish not set'}<strong>View →</strong></footer></div></button>})}</section><aside className="detail-panel material-detail"><div className="detail-panel__head"><div><span className="eyebrow">{selected.code}</span><h2>{selected.name}</h2></div><StatusBadge status={selected.status} /></div><SafeImage className="detail-panel__image" src="/assets/project-03.jpg" alt={selected.name} /><div className="detail-block"><h3>Classification</h3><dl><div><dt>Material Class</dt><dd>{selected.category}</dd></div><div><dt>Collection</dt><dd>{selectedCollection?.name ?? 'Unknown'}</dd></div><div><dt>Finish / Texture</dt><dd>{selected.finish || 'Not set'}</dd></div><div><dt>Internal Reference</dt><dd>{selected.code}</dd></div></dl><p>{selected.description}</p></div><div className="detail-actions"><Button onClick={() => selectedCollection && setDialog({ type: 'collection', item: selectedCollection })}>Edit Collection</Button><Button variant="primary" onClick={() => setDialog({ type: 'material', item: selected })}>Edit Material</Button></div></aside></div>}
 
-  return (
-    <div className="page cms-page">
-      <div className="breadcrumbs">CMS Master Index <span>/</span> Materials &amp; Finishes</div>
-      <div className="page-heading"><div><h1>Materials &amp; Finishes</h1><p>Manage material ranges, technical specifications, extrusion finishes, and client showcase visibility. <span className="mock-label">Illustrative data</span></p></div><div className="page-heading__actions"><Button icon={<Plus size={15} />} onClick={() => setDialog('Add Material Range')}>Add Material Range</Button><Button variant="primary" icon={<Plus size={15} />} onClick={() => setDialog('Add Material')}>Add Material</Button></div></div>
-
-      <section className="metrics cms-metrics" aria-label="Material summary">
-        <MetricCard label="Total Materials" value="42" note="Catalogued" icon={<Shapes size={17} />} />
-        <MetricCard label="Material Ranges" value="3" note="Active Ranges" icon={<Layers size={17} />} />
-        <MetricCard label="Published Finishes" value="38" note="Active in Portal" icon={<Eye size={17} />} />
-        <MetricCard label="Linked Works" value="86" note="In Fit-out Specs" icon={<Wrench size={17} />} />
-      </section>
-
-      <div className="tabs" role="tablist" aria-label="Material range">
-        {(['All Materials', 'Cap Range', 'Mid Cap', 'Low Cap'] as Range[]).map((item) => <button key={item} role="tab" aria-selected={range === item} className={range === item ? 'active' : ''} onClick={() => setRange(item)}>{item}</button>)}
-      </div>
-      <div className="cms-toolbar cms-toolbar--wrap">
-        <label className="filter-search"><Search size={16} /><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search material code, finish, profile..." aria-label="Search materials" /></label>
-        <label className="select-control"><select value={category} onChange={(event) => setCategory(event.target.value)} aria-label="Material type"><option value="All">All Types</option>{[...new Set(materials.map((material) => material.category))].map((item) => <option key={item}>{item}</option>)}</select></label>
-        <label className="select-control"><select value={finish} onChange={(event) => setFinish(event.target.value)} aria-label="Material finish"><option value="All">All Finishes</option>{[...new Set(materials.map((material) => material.finish))].map((item) => <option key={item}>{item}</option>)}</select></label>
-        <label className="select-control"><select value={status} onChange={(event) => setStatus(event.target.value)} aria-label="Material visibility"><option value="All">All Visibility</option><option>Published</option><option>Draft</option></select></label>
-        <div className="view-toggle" aria-label="Material view"><button className={view === 'grid' ? 'active' : ''} onClick={() => setView('grid')} aria-label="Grid view"><Grid2X2 size={17} /></button><button className={view === 'list' ? 'active' : ''} onClick={() => setView('list')} aria-label="List view"><List size={18} /></button></div>
-      </div>
-
-      <div className="split-workspace">
-        <section className={`material-grid material-grid--${view}`}>
-          {filtered.map((material) => <button key={material.id} className={`material-card ${selected.id === material.id ? 'selected' : ''}`} onClick={() => setSelectedId(material.id)}>
-            <div className="material-card__media"><SafeImage src={material.image} alt={material.name} /><span>{material.range}</span><StatusBadge status={material.status} /></div>
-            <div className="material-card__body"><small>{material.code} • {material.category}</small><h3>{material.name}</h3><p>{material.description}</p><footer>{material.works} Works • {material.association}<strong>View →</strong></footer></div>
-          </button>)}
-          {!filtered.length && <div className="empty-state"><h2>No matching materials</h2><p>Try changing the current search or filters.</p></div>}
-        </section>
-
-        <aside className="detail-panel material-detail">
-          <div className="detail-panel__head"><div><span className="eyebrow">{selected.code}</span><h2>{selected.name}</h2></div><StatusBadge status={selected.status} /></div>
-          <SafeImage className="detail-panel__image" src={selected.image} alt={selected.name} />
-          <div className="detail-block"><h3>A • Basic Classification</h3><dl><div><dt>Material Class</dt><dd>{selected.category}</dd></div><div><dt>Material Range</dt><dd>{selected.range}</dd></div><div><dt>Finish / Texture</dt><dd>{selected.finish}</dd></div><div><dt>Internal Reference</dt><dd>{selected.code}</dd></div></dl><p>{selected.description}</p></div>
-          <div className="detail-block"><h3>B • Technical Specifications</h3><dl><div><dt>Standard / Grade</dt><dd>DIN EN 12020-2 / 6063-T6</dd></div><div><dt>Linked Works</dt><dd>{selected.works}</dd></div><div><dt>Project Allocation</dt><dd>{selected.association}</dd></div></dl></div>
-          <div className="setting-row material-visibility"><span><strong>Client Portal Showcase</strong><small>Display in finish selectors and technical moodboards.</small></span><button type="button" className={`toggle ${portalVisible ? 'toggle--on' : ''}`} role="switch" aria-checked={portalVisible} aria-label="Client Portal Showcase" onClick={() => setPortalVisible((visible) => !visible)}><i /></button></div>
-          <Button variant="primary" onClick={() => setDialog(`Save ${selected.name}`)}>Save Changes</Button>
-        </aside>
-      </div>
-      {dialog && <PlaceholderDialog title={dialog} onClose={() => setDialog(null)} />}
-    </div>
-  )
+    {dialog?.type === 'collection' && <CmsDialog title={dialog.item ? `Edit ${dialog.item.name}` : 'Add Material Range'} onClose={() => setDialog(null)}><AsyncForm onClose={close} danger={dialog.item ? { label: 'Delete range', action: () => deleteMaterialCollection(dialog.item!.id) } : undefined} onSubmit={async (form) => { const name = value(form, 'name'); await saveMaterialCollection({ name, slug: value(form, 'slug') || slugify(name), range: value(form, 'range') as MaterialRange, description: value(form, 'description') || null, status: value(form, 'status') as ContentStatus, sort_order: Number(value(form, 'sort_order') || 0) }, dialog.item?.id) }}><div className="cms-dialog__grid"><label className="field"><span>Name</span><input name="name" required defaultValue={dialog.item?.name} /></label><label className="field"><span>Slug</span><input name="slug" defaultValue={dialog.item?.slug} /></label><label className="field"><span>Range</span><select name="range" defaultValue={dialog.item?.range ?? 'cap'}><option value="cap">Cap Range</option><option value="mid_cap">Mid Cap</option><option value="low_cap">Low Cap</option></select></label><label className="field"><span>Sort order</span><input name="sort_order" type="number" defaultValue={dialog.item?.sort_order ?? 0} /></label><StatusField value={dialog.item?.status} /><label className="field field--wide"><span>Description</span><textarea name="description" defaultValue={dialog.item?.description ?? ''} /></label></div></AsyncForm></CmsDialog>}
+    {dialog?.type === 'material' && <CmsDialog title={dialog.item ? `Edit ${dialog.item.name}` : 'Add Material'} onClose={() => setDialog(null)}><AsyncForm onClose={close} danger={dialog.item ? { label: 'Delete material', action: () => deleteMaterial(dialog.item!.id) } : undefined} onSubmit={async (form) => { let specs: Json = {}; const raw = value(form, 'technical_specifications'); if (raw) { try { specs = JSON.parse(raw) as Json } catch { throw new Error('Technical specifications must be valid JSON.') } } await saveMaterial({ collection_id: value(form, 'collection_id'), code: value(form, 'code'), name: value(form, 'name'), category: value(form, 'category'), finish: value(form, 'finish') || null, description: value(form, 'description') || null, technical_specifications: specs, status: value(form, 'status') as ContentStatus, cover_asset_id: null }, dialog.item?.id) }}><div className="cms-dialog__grid"><label className="field"><span>Collection</span><select name="collection_id" required defaultValue={dialog.item?.collection_id}><option value="">Select collection</option>{collections.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</select></label><label className="field"><span>Code</span><input name="code" required defaultValue={dialog.item?.code} /></label><label className="field"><span>Name</span><input name="name" required defaultValue={dialog.item?.name} /></label><label className="field"><span>Category</span><input name="category" required defaultValue={dialog.item?.category} /></label><label className="field"><span>Finish</span><input name="finish" defaultValue={dialog.item?.finish ?? ''} /></label><StatusField value={dialog.item?.status} /><label className="field field--wide"><span>Description</span><textarea name="description" defaultValue={dialog.item?.description ?? ''} /></label><label className="field field--wide"><span>Technical specifications (JSON)</span><textarea name="technical_specifications" defaultValue={JSON.stringify(dialog.item?.technical_specifications ?? {}, null, 2)} /></label></div></AsyncForm></CmsDialog>}
+  </div>
 }

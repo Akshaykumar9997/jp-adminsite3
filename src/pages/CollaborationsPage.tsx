@@ -1,69 +1,64 @@
-import { Download, Edit3, Eye, Grid2X2, List, Mail, MapPin, MoreVertical, Phone, Search, UserPlus, UsersRound } from 'lucide-react'
+import { Download, Edit3, Eye, Grid2X2, List, Mail, MapPin, Phone, Search, Trash2, UserPlus, UsersRound } from 'lucide-react'
 import { useMemo, useState } from 'react'
-import { collaborators } from '../data/adminMockData'
-import { Button, MetricCard, PlaceholderDialog } from '../components/ui'
+import { Button, MetricCard, StatusBadge } from '../components/ui'
+import { AsyncForm, CmsDialog, ErrorState, LoadingState, StatusField } from '../components/CmsDialog'
+import { useAsyncData } from '../hooks/useAsyncData'
+import { assignPartner, deletePartner, deletePrivatePartnerDocument, getAdminMediaUrl, listMediaAssets, listPartners, listProjects, savePartner, uploadPrivatePartnerDocument } from '../lib/showcase'
+import type { ContentStatus, Partner, PartnerStatus } from '../lib/database.types'
 
 type View = 'list' | 'grid'
+type Dialog = { type: 'partner'; item?: Partner } | { type: 'assign'; item: Partner } | { type: 'document'; item: Partner }
+const value = (form: FormData, key: string) => String(form.get(key) ?? '').trim()
+const statusLabel = (status: PartnerStatus) => status === 'pending_nda' ? 'Pending NDA' : status[0].toUpperCase() + status.slice(1)
+
+async function loadCollaborations() {
+  const [partners, projects, media] = await Promise.all([listPartners(), listProjects(), listMediaAssets()])
+  return { ...partners, projects, media }
+}
 
 export function CollaborationsPage() {
+  const { data, error, loading, reload } = useAsyncData(loadCollaborations)
   const [query, setQuery] = useState('')
   const [role, setRole] = useState('All')
   const [status, setStatus] = useState('All')
-  const [sort, setSort] = useState('recent')
   const [view, setView] = useState<View>('list')
-  const [selectedId, setSelectedId] = useState(1)
-  const [dialog, setDialog] = useState<string | null>(null)
+  const [selectedId, setSelectedId] = useState<string | null>(null)
+  const [dialog, setDialog] = useState<Dialog | null>(null)
+  const [documentError, setDocumentError] = useState('')
+  const partners = data?.partners ?? []
+  const selected = partners.find((item) => item.id === selectedId) ?? partners[0]
+  const selectedDetails = data?.details.find((item) => item.partner_id === selected?.id)
+  const filtered = useMemo(() => { const normalized = query.toLowerCase().trim(); return partners.filter((item) => (role === 'All' || item.role === role) && (status === 'All' || item.relationship_status === status) && (!normalized || `${item.name} ${item.studio ?? ''} ${item.role ?? ''}`.toLowerCase().includes(normalized))) }, [partners, query, role, status])
+  const close = () => { setDialog(null); void reload() }
+  const openDocument = async (mediaAssetId: string) => {
+    setDocumentError('')
+    try {
+      const asset = data?.media.find((item) => item.id === mediaAssetId)
+      if (!asset) throw new Error('The private document metadata is incomplete.')
+      window.open(await getAdminMediaUrl(asset), '_blank', 'noopener,noreferrer')
+    } catch (reason) {
+      setDocumentError(reason instanceof Error ? reason.message : 'The private document could not be opened.')
+    }
+  }
+  const removeDocument = async (documentId: string) => {
+    const document = data?.documents.find((item) => item.id === documentId)
+    const asset = data?.media.find((item) => item.id === document?.media_asset_id)
+    if (!document || !asset) { setDocumentError('The private document metadata is incomplete.'); return }
+    if (!window.confirm(`Delete private document “${document.title}”?`)) return
+    setDocumentError('')
+    try { await deletePrivatePartnerDocument(document, asset); await reload() }
+    catch (reason) { setDocumentError(reason instanceof Error ? reason.message : 'The private document could not be deleted.') }
+  }
 
-  const filtered = useMemo(() => {
-    const normalized = query.trim().toLowerCase()
-    return collaborators
-      .filter((person) => role === 'All' || person.role === role)
-      .filter((person) => status === 'All' || person.status === status)
-      .filter((person) => !normalized || `${person.name} ${person.studio} ${person.role} ${person.projects}`.toLowerCase().includes(normalized))
-      .sort((a, b) => sort === 'name' ? a.name.localeCompare(b.name) : sort === 'active' ? a.status.localeCompare(b.status) : a.id - b.id)
-  }, [query, role, sort, status])
-  const selected = collaborators.find((person) => person.id === selectedId) ?? collaborators[0]
+  return <div className="page cms-page">
+    <div className="breadcrumbs">CMS Master Index <span>/</span> Collaborations</div>
+    <div className="page-heading"><div><h1>Collaborations</h1><p>Manage public partner profiles, private contact details, documents, and project assignments.</p></div><Button variant="primary" icon={<UserPlus size={15} />} onClick={() => setDialog({ type: 'partner' })}>Add Collaborator</Button></div>
+    <section className="metrics cms-metrics cms-metrics--three"><MetricCard label="Total Collaborators" value={String(partners.length)} note="Partner records" icon={<UsersRound size={17} />} /><MetricCard label="Active Collaborations" value={String(partners.filter((item) => item.relationship_status === 'active').length)} note="Active" icon={<UsersRound size={17} />} /><MetricCard label="Private Documents" value={String(data?.documents.length ?? 0)} note="Admin only" icon={<UsersRound size={17} />} /></section>
+    <div className="cms-toolbar cms-toolbar--wrap"><label className="filter-search"><Search size={16} /><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search collaborators..." /></label><label className="select-control"><select value={role} onChange={(event) => setRole(event.target.value)}><option value="All">All Roles</option>{[...new Set(partners.map((item) => item.role).filter(Boolean))].map((item) => <option key={item!}>{item}</option>)}</select></label><label className="select-control"><select value={status} onChange={(event) => setStatus(event.target.value)}><option value="All">All Statuses</option><option value="active">Active</option><option value="pending_nda">Pending NDA</option><option value="inactive">Inactive</option></select></label><div className="view-toggle"><button className={view === 'list' ? 'active' : ''} onClick={() => setView('list')}><List size={18} /></button><button className={view === 'grid' ? 'active' : ''} onClick={() => setView('grid')}><Grid2X2 size={17} /></button></div></div>
+    {loading ? <LoadingState /> : error ? <ErrorState message={error} retry={() => void reload()} /> : !selected ? <div className="empty-state"><h2>No collaborators yet</h2><p>Add the first public partner profile.</p></div> : <div className="split-workspace collaboration-workspace"><section className={`collaborator-list collaborator-list--${view}`}>{view === 'list' && <div className="collaborator-list__head"><span>Collaborator</span><span>Role</span><span>Assigned Projects</span><span>Contact</span><span>Status</span><span>Updated</span><span>Actions</span></div>}{filtered.map((person) => { const details = data?.details.find((item) => item.partner_id === person.id); const assignmentCount = data?.assignments.filter((item) => item.partner_id === person.id).length ?? 0; return <article key={person.id} className={`collaborator-row ${selected.id === person.id ? 'selected' : ''}`}><button className="collaborator-person" onClick={() => setSelectedId(person.id)}><span className="collaborator-avatar">{person.name.slice(0, 2).toUpperCase()}</span><span><strong>{person.name}</strong><small>{person.studio || 'Independent'}</small></span></button><span>{person.role || 'Partner'}</span><span>{assignmentCount} projects</span><span className="collaborator-contact">{details?.email ? <a href={`mailto:${details.email}`}>{details.email}</a> : 'Private contact not set'}<small>{details?.phone}</small></span><span><i className={`collaborator-status collaborator-status--${person.relationship_status.replace('_', '-')}`}>{statusLabel(person.relationship_status)}</i></span><span>{new Intl.DateTimeFormat('en-IN', { dateStyle: 'medium' }).format(new Date(person.updated_at))}</span><div className="row-actions"><button onClick={() => setSelectedId(person.id)}><Eye size={14} /></button><button onClick={() => setDialog({ type: 'partner', item: person })}><Edit3 size={14} /></button></div></article>})}</section><aside className="detail-panel collaborator-detail"><div className="detail-panel__head"><div><span className="eyebrow">Collaborator Dossier</span><h2>{selected.name}</h2><p>{selected.role || 'Partner'} • {selected.studio || 'Independent'}</p></div><StatusBadge status={selected.status} /></div><div className="dossier-contact"><p><Mail size={14} /><span>{selectedDetails?.email || 'Not set'}</span></p><p><Phone size={14} /><span>{selectedDetails?.phone || 'Not set'}</span></p><p><MapPin size={14} /><span>{selected.location || 'Not set'}</span></p></div><div className="detail-block"><h3>Assigned Projects</h3>{data?.assignments.filter((item) => item.partner_id === selected.id).map((assignment) => <p key={assignment.project_id}><strong>{data.projects.find((item) => item.id === assignment.project_id)?.title}</strong><span>{assignment.assignment_role || 'Partner'}</span></p>)}<Button icon={<UserPlus size={14} />} onClick={() => setDialog({ type: 'assign', item: selected })}>Assign Project</Button></div><div className="detail-block"><h3>Private Documents</h3>{data?.documents.filter((item) => item.partner_id === selected.id).map((document) => <p key={document.id}><span><strong>{document.title}</strong><small>{document.document_kind}{document.expires_on ? ` • expires ${document.expires_on}` : ''}</small></span><span className="row-actions"><button type="button" title="Open private document" onClick={() => void openDocument(document.media_asset_id)}><Download size={14} /></button><button type="button" title="Delete private document" onClick={() => void removeDocument(document.id)}><Trash2 size={14} /></button></span></p>)}{documentError && <p className="form-error" role="alert">{documentError}</p>}<Button onClick={() => setDialog({ type: 'document', item: selected })}>Upload Private Document</Button></div><Button variant="primary" onClick={() => setDialog({ type: 'partner', item: selected })}>Edit Dossier</Button></aside></div>}
 
-  return (
-    <div className="page cms-page">
-      <div className="breadcrumbs">CMS Master Index <span>/</span> Collaborations</div>
-      <div className="page-heading"><div><h1>Collaborations</h1><p>Manage project partners, consultants, vendors, and collaboration assignments. <span className="mock-label">Illustrative data</span></p></div><div className="page-heading__actions"><Button icon={<Download size={15} />} onClick={() => setDialog('Export Collaborator Directory')}>Export Directory</Button><Button variant="primary" icon={<UserPlus size={15} />} onClick={() => setDialog('Add Collaborator')}>Add Collaborator</Button></div></div>
-
-      <section className="metrics cms-metrics cms-metrics--three" aria-label="Collaboration summary">
-        <MetricCard label="Total Collaborators" value="48" note="Registered Partners" icon={<UsersRound size={17} />} />
-        <MetricCard label="Active Collaborations" value="34" note="Assigned to Live Works" icon={<UsersRound size={17} />} />
-        <MetricCard label="Pending Review" value="5" note="Agreement & NDA" icon={<UsersRound size={17} />} />
-      </section>
-
-      <div className="cms-toolbar cms-toolbar--wrap">
-        <label className="filter-search"><Search size={16} /><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search collaborators..." aria-label="Search collaborators" /></label>
-        <label className="select-control"><select value={role} onChange={(event) => setRole(event.target.value)} aria-label="Collaborator role"><option value="All">All Roles</option>{[...new Set(collaborators.map((person) => person.role))].map((item) => <option key={item}>{item}</option>)}</select></label>
-        <label className="select-control"><select value={status} onChange={(event) => setStatus(event.target.value)} aria-label="Collaborator status"><option value="All">All Statuses</option><option>Active</option><option>Pending NDA</option><option>Inactive</option></select></label>
-        <label className="select-control"><select value={sort} onChange={(event) => setSort(event.target.value)} aria-label="Sort collaborators"><option value="recent">Recently Updated</option><option value="name">Name A–Z</option><option value="active">Most Active</option></select></label>
-        <div className="view-toggle" aria-label="Collaborator view"><button className={view === 'list' ? 'active' : ''} onClick={() => setView('list')} aria-label="List view"><List size={18} /></button><button className={view === 'grid' ? 'active' : ''} onClick={() => setView('grid')} aria-label="Grid view"><Grid2X2 size={17} /></button></div>
-      </div>
-
-      <div className="split-workspace collaboration-workspace">
-        <section className={`collaborator-list collaborator-list--${view}`}>
-          {view === 'list' && <div className="collaborator-list__head"><span>Collaborator</span><span>Role</span><span>Assigned Projects</span><span>Contact</span><span>Status</span><span>Updated</span><span>Actions</span></div>}
-          {filtered.map((person) => <article key={person.id} className={`collaborator-row ${selected.id === person.id ? 'selected' : ''}`}>
-            <button className="collaborator-person" onClick={() => setSelectedId(person.id)}><span className="collaborator-avatar">{person.initials}</span><span><strong>{person.name}</strong><small>{person.studio}</small></span></button>
-            <span data-label="Role">{person.role}</span><span data-label="Projects">{person.projects}</span><span className="collaborator-contact" data-label="Contact"><a href={`mailto:${person.email}`}>{person.email}</a><small>{person.phone}</small></span><span data-label="Status"><i className={`collaborator-status collaborator-status--${person.status.toLowerCase().replace(' ', '-')}`}>{person.status}</i></span><span data-label="Updated">{person.updated}</span>
-            <div className="row-actions"><button aria-label={`View ${person.name}`} onClick={() => setSelectedId(person.id)}><Eye size={14} /></button><button aria-label={`Edit ${person.name}`} onClick={() => setDialog(`Edit ${person.name}`)}><Edit3 size={14} /></button><button aria-label={`More options for ${person.name}`} onClick={() => setDialog(`Manage ${person.name}`)}><MoreVertical size={14} /></button></div>
-          </article>)}
-          {!filtered.length && <div className="empty-state"><h2>No matching collaborators</h2><p>Try changing the search or directory filters.</p></div>}
-        </section>
-
-        <aside className="detail-panel collaborator-detail">
-          <div className="detail-panel__head"><div><span className="eyebrow">Collaborator Dossier</span><h2>{selected.name}</h2><p>{selected.role} • {selected.studio}</p></div><span className={`collaborator-status collaborator-status--${selected.status.toLowerCase().replace(' ', '-')}`}>{selected.status}</span></div>
-          <div className="dossier-contact"><p><Mail size={14} /><span>{selected.email}</span></p><p><Phone size={14} /><span>{selected.phone}</span></p><p><MapPin size={14} /><span>New Delhi &amp; Bangalore, India</span></p></div>
-          <div className="detail-block"><h3>Assigned Projects</h3><p><strong>Jubilee Hills Residence</strong><span>14 Works • Architectural Director</span></p><p><strong>The Altius Villa</strong><span>6 Works • Joinery Consultant</span></p><Button icon={<UserPlus size={14} />} onClick={() => setDialog('Assign Project')}>Assign Project</Button></div>
-          <div className="detail-block"><h3>Access &amp; Governance</h3><dl><div><dt>Partner Portal Access</dt><dd>Enabled</dd></div><div><dt>NDA / Specification Agreement</dt><dd>Valid until Dec 2026</dd></div></dl></div>
-          <Button variant="primary" onClick={() => setDialog(`Edit ${selected.name}`)}>Edit Dossier</Button>
-        </aside>
-      </div>
-      <div className="projects-pagination"><span>Showing {filtered.length} of 48 illustrative collaborators</span><nav aria-label="Collaborator pages"><button disabled>‹</button><button className="active">1</button><button onClick={() => setDialog('Collaborator page 2')}>2</button><button onClick={() => setDialog('Next collaborator page')}>›</button></nav></div>
-      {dialog && <PlaceholderDialog title={dialog} onClose={() => setDialog(null)} />}
-    </div>
-  )
+    {dialog?.type === 'partner' && <CmsDialog title={dialog.item ? `Edit ${dialog.item.name}` : 'Add Collaborator'} onClose={() => setDialog(null)}><AsyncForm onClose={close} danger={dialog.item ? { label: 'Delete collaborator', action: () => deletePartner(dialog.item!.id) } : undefined} onSubmit={async (form) => { await savePartner({ name: value(form, 'name'), studio: value(form, 'studio') || null, role: value(form, 'role') || null, public_bio: value(form, 'public_bio') || null, location: value(form, 'location') || null, relationship_status: value(form, 'relationship_status') as PartnerStatus, status: value(form, 'status') as ContentStatus, logo_asset_id: null }, { email: value(form, 'email') || null, phone: value(form, 'phone') || null, nda_status: value(form, 'nda_status') || null, nda_expires_on: value(form, 'nda_expires_on') || null, internal_notes: value(form, 'internal_notes') || null }, dialog.item?.id) }}><div className="cms-dialog__grid"><label className="field"><span>Name</span><input name="name" required defaultValue={dialog.item?.name} /></label><label className="field"><span>Studio</span><input name="studio" defaultValue={dialog.item?.studio ?? ''} /></label><label className="field"><span>Role</span><input name="role" defaultValue={dialog.item?.role ?? ''} /></label><label className="field"><span>Location</span><input name="location" defaultValue={dialog.item?.location ?? ''} /></label><label className="field"><span>Relationship status</span><select name="relationship_status" defaultValue={dialog.item?.relationship_status ?? 'active'}><option value="active">Active</option><option value="pending_nda">Pending NDA</option><option value="inactive">Inactive</option></select></label><StatusField value={dialog.item?.status} /><label className="field"><span>Private email</span><input type="email" name="email" defaultValue={data?.details.find((item) => item.partner_id === dialog.item?.id)?.email ?? ''} /></label><label className="field"><span>Private phone</span><input name="phone" defaultValue={data?.details.find((item) => item.partner_id === dialog.item?.id)?.phone ?? ''} /></label><label className="field"><span>NDA status</span><input name="nda_status" defaultValue={data?.details.find((item) => item.partner_id === dialog.item?.id)?.nda_status ?? ''} /></label><label className="field"><span>NDA expiry</span><input type="date" name="nda_expires_on" defaultValue={data?.details.find((item) => item.partner_id === dialog.item?.id)?.nda_expires_on ?? ''} /></label><label className="field field--wide"><span>Public bio</span><textarea name="public_bio" defaultValue={dialog.item?.public_bio ?? ''} /></label><label className="field field--wide"><span>Internal notes</span><textarea name="internal_notes" defaultValue={data?.details.find((item) => item.partner_id === dialog.item?.id)?.internal_notes ?? ''} /></label></div></AsyncForm></CmsDialog>}
+    {dialog?.type === 'assign' && <CmsDialog title={`Assign ${dialog.item.name}`} onClose={() => setDialog(null)}><AsyncForm onClose={close} onSubmit={async (form) => assignPartner(value(form, 'project_id'), dialog.item.id, value(form, 'assignment_role'))}><div className="cms-dialog__grid"><label className="field field--wide"><span>Project</span><select name="project_id" required><option value="">Select project</option>{data?.projects.map((item) => <option key={item.id} value={item.id}>{item.title}</option>)}</select></label><label className="field field--wide"><span>Assignment role</span><input name="assignment_role" required defaultValue={dialog.item.role ?? ''} /></label></div></AsyncForm></CmsDialog>}
+    {dialog?.type === 'document' && <CmsDialog title={`Private Document — ${dialog.item.name}`} onClose={() => setDialog(null)}><AsyncForm submitLabel="Upload private file" onClose={close} onSubmit={async (form) => { const file = form.get('file'); if (!(file instanceof File) || !file.size) throw new Error('Choose a file.'); await uploadPrivatePartnerDocument(dialog.item.id, file, value(form, 'title') || file.name, value(form, 'document_kind'), value(form, 'expires_on') || null) }}><div className="cms-dialog__grid"><label className="field field--wide"><span>File</span><input name="file" type="file" required /></label><label className="field"><span>Title</span><input name="title" /></label><label className="field"><span>Document kind</span><input name="document_kind" required defaultValue="nda" /></label><label className="field"><span>Expires on</span><input name="expires_on" type="date" /></label></div></AsyncForm></CmsDialog>}
+  </div>
 }

@@ -1,71 +1,45 @@
-import { Boxes, Grid2X2, Image, Link2, List, Pencil, Plus, Search, Unlink, Wrench } from 'lucide-react'
+import { Boxes, Grid2X2, Image, Link2, List, Pencil, Plus, Search, Wrench } from 'lucide-react'
 import { useMemo, useState } from 'react'
-import { roomWorks } from '../data/adminMockData'
 import { SafeImage } from '../components/SafeImage'
-import { Button, MetricCard, PlaceholderDialog, StatusBadge } from '../components/ui'
+import { Button, MetricCard, StatusBadge } from '../components/ui'
+import { AsyncForm, CmsDialog, ErrorState, LoadingState, StatusField } from '../components/CmsDialog'
+import { useAsyncData } from '../hooks/useAsyncData'
+import { deleteRoomCategory, deleteWork, listProjectRooms, listProjects, listRoomCategories, listWorks, saveProjectRoom, saveRoomCategory, saveWork } from '../lib/showcase'
+import type { ContentStatus, RoomCategory, Work } from '../lib/database.types'
 
-type WorkTab = 'All Works' | 'Project Linked' | 'Standalone Work'
 type View = 'grid' | 'list'
+type Dialog = { type: 'room'; item?: RoomCategory } | { type: 'work'; item?: Work } | { type: 'projectRoom' }
+const value = (form: FormData, key: string) => String(form.get(key) ?? '').trim()
+const slugify = (text: string) => text.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')
+
+async function loadRooms() {
+  const [rooms, works, projects, projectRooms] = await Promise.all([listRoomCategories(), listWorks(), listProjects(), listProjectRooms()])
+  return { rooms, works, projects, projectRooms }
+}
 
 export function RoomsPage() {
-  const [tab, setTab] = useState<WorkTab>('All Works')
+  const { data, error, loading, reload } = useAsyncData(loadRooms)
+  const [roomId, setRoomId] = useState<string | null>(null)
   const [query, setQuery] = useState('')
   const [status, setStatus] = useState('All')
   const [view, setView] = useState<View>('grid')
-  const [dialog, setDialog] = useState<string | null>(null)
+  const [dialog, setDialog] = useState<Dialog | null>(null)
+  const room = data?.rooms.find((item) => item.id === roomId) ?? data?.rooms[0]
+  const works = useMemo(() => { const normalized = query.toLowerCase().trim(); return (data?.works ?? []).filter((item) => item.room_category_id === room?.id && (status === 'All' || item.status === status) && (!normalized || `${item.title} ${item.specification ?? ''}`.toLowerCase().includes(normalized))) }, [data?.works, query, room?.id, status])
+  const linkedCount = works.filter((item) => item.project_id).length
+  const close = () => { setDialog(null); void reload() }
+  if (loading) return <div className="page cms-page"><LoadingState label="Loading rooms and works…" /></div>
+  if (error) return <div className="page cms-page"><ErrorState message={error} retry={() => void reload()} /></div>
 
-  const visibleWorks = useMemo(() => {
-    const normalized = query.trim().toLowerCase()
-    return roomWorks.filter((work) =>
-      (tab === 'All Works' || work.type === tab) &&
-      (status === 'All' || work.status === status) &&
-      (!normalized || `${work.title} ${work.association} ${work.specification}`.toLowerCase().includes(normalized)),
-    )
-  }, [query, status, tab])
+  return <div className="page cms-page">
+    <div className="breadcrumbs">Rooms &amp; Categories <span>/</span> {room?.name ?? 'No categories'}</div>
+    <div className="page-heading room-heading"><div><span className="eyebrow">{room?.zone_label || 'Showcase room category'}</span><h1>{room?.name || 'Rooms & Categories'}</h1><p>{room?.description || 'Create the first room category to organize showcase works.'}</p></div><div className="page-heading__actions">{room && <Button icon={<Pencil size={15} />} onClick={() => setDialog({ type: 'room', item: room })}>Edit Room</Button>}<Button icon={<Link2 size={15} />} onClick={() => setDialog({ type: 'projectRoom' })} disabled={!room}>Assign to Project</Button><Button variant="primary" icon={<Plus size={15} />} onClick={() => setDialog(room ? { type: 'work' } : { type: 'room' })}>Add {room ? 'Work' : 'Room'}</Button></div></div>
+    {!!data?.rooms.length && <div className="tabs" role="tablist">{data.rooms.map((item) => <button key={item.id} className={item.id === room?.id ? 'active' : ''} onClick={() => setRoomId(item.id)}>{item.name}</button>)}</div>}
+    <section className="metrics cms-metrics"><MetricCard label="Total Works" value={String(works.length)} note="In category" icon={<Wrench size={17} />} /><MetricCard label="Project-Linked Works" value={String(linkedCount)} note="Associated" icon={<Boxes size={17} />} /><MetricCard label="Standalone Works" value={String(works.length - linkedCount)} note="Independent" icon={<Grid2X2 size={17} />} /><MetricCard label="Project Rooms" value={String(data?.projectRooms.filter((item) => item.room_category_id === room?.id).length ?? 0)} note="Assignments" icon={<Image size={17} />} /></section>
+    <section className="cms-section"><div className="cms-section__heading"><div><h2>Works in {room?.name ?? 'this category'}</h2><p>Manage project-linked and standalone showcase works.</p></div>{room && <StatusBadge status={room.status} />}</div><div className="cms-toolbar cms-toolbar--wrap"><label className="filter-search"><Search size={16} /><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search works by title..." /></label><label className="select-control"><select value={status} onChange={(event) => setStatus(event.target.value)}><option value="All">All statuses</option><option value="published">Published</option><option value="draft">Draft</option><option value="archived">Archived</option></select></label><div className="view-toggle"><button className={view === 'grid' ? 'active' : ''} onClick={() => setView('grid')}><Grid2X2 size={17} /></button><button className={view === 'list' ? 'active' : ''} onClick={() => setView('list')}><List size={18} /></button></div></div><div className={`asset-grid asset-grid--${view}`}>{works.map((work) => <article className="asset-card" key={work.id}><div className="asset-card__media"><SafeImage src="/assets/project-04.jpg" alt={work.title} /><StatusBadge status={work.status} /></div><div className="asset-card__body"><small>{work.project_id ? 'Project Linked' : 'Standalone Work'}</small><h3>{work.title}</h3><p>{data?.projects.find((item) => item.id === work.project_id)?.title || 'Standalone showcase'}</p><dl><div><dt>Specification</dt><dd>{work.specification || 'Not set'}</dd></div></dl><div className="asset-card__footer"><span>{work.slug || 'No slug'}</span><button onClick={() => setDialog({ type: 'work', item: work })}><Pencil size={14} /></button></div></div></article>)}{!works.length && <div className="empty-state"><h2>No works in this room</h2><p>Add a work or change the filter.</p></div>}</div></section>
 
-  return (
-    <div className="page cms-page">
-      <div className="breadcrumbs">Rooms &amp; Categories <span>/</span> Room Detail <span>/</span> Living &amp; Hall</div>
-      <div className="page-heading room-heading">
-        <div><span className="eyebrow">Room Zone 01 • Master Category</span><h1>Living &amp; Hall</h1><p>Main entrance, double-height living area and hall. <span className="mock-label">Illustrative data</span></p></div>
-        <div className="page-heading__actions">
-          <Button icon={<Pencil size={15} />} onClick={() => setDialog('Edit Room')}>Edit Room</Button>
-          <Button onClick={() => setDialog('Reorder Works')}>Reorder Works</Button>
-          <Button icon={<Link2 size={15} />} onClick={() => setDialog('Link Existing Work')}>Link Existing Work</Button>
-          <Button variant="primary" icon={<Plus size={15} />} onClick={() => setDialog('Add New Work')}>Add New Work</Button>
-        </div>
-      </div>
-
-      <section className="metrics cms-metrics" aria-label="Room summary">
-        <MetricCard label="Total Works" value="24" note="Catalogued" icon={<Wrench size={17} />} />
-        <MetricCard label="Project-Linked Works" value="18" note="Active" icon={<Boxes size={17} />} />
-        <MetricCard label="Standalone Works" value="06" note="Specimens" icon={<Grid2X2 size={17} />} />
-        <MetricCard label="Media Assets" value="142" note="CAD & Renders" icon={<Image size={17} />} />
-      </section>
-
-      <section className="cms-section">
-        <div className="cms-section__heading"><div><h2>Works in Living &amp; Hall</h2><p>Manage architectural works linked to this room and standalone showcase works.</p></div><span className="status status--published"><i />Published to Client Portal</span></div>
-        <div className="cms-toolbar cms-toolbar--wrap">
-          <div className="tabs tabs--compact" role="tablist" aria-label="Work relationship">
-            {(['All Works', 'Project Linked', 'Standalone Work'] as WorkTab[]).map((item) => <button key={item} role="tab" aria-selected={tab === item} className={tab === item ? 'active' : ''} onClick={() => setTab(item)}>{item}</button>)}
-          </div>
-          <label className="filter-search"><Search size={16} /><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search works by title..." aria-label="Search room works" /></label>
-          <label className="select-control"><select value={status} onChange={(event) => setStatus(event.target.value)} aria-label="Portal status"><option value="All">Portal Status: All</option><option>Published</option><option>Draft</option></select></label>
-          <div className="view-toggle" aria-label="Room works view"><button className={view === 'grid' ? 'active' : ''} onClick={() => setView('grid')} aria-label="Grid view"><Grid2X2 size={17} /></button><button className={view === 'list' ? 'active' : ''} onClick={() => setView('list')} aria-label="List view"><List size={18} /></button></div>
-        </div>
-
-        <div className={`asset-grid asset-grid--${view}`}>
-          {visibleWorks.map((work) => (
-            <article className="asset-card" key={work.id}>
-              <div className="asset-card__media"><SafeImage src={work.image} alt={work.title} /><StatusBadge status={work.status} /></div>
-              <div className="asset-card__body"><small>{work.type}</small><h3>{work.title}</h3><p>{work.association}</p><dl><div><dt>Finish</dt><dd>{work.specification}</dd></div></dl><div className="asset-card__footer"><span>{work.assets}</span><div><button onClick={() => setDialog(`Unlink ${work.title}`)} aria-label={`Unlink ${work.title}`}><Unlink size={14} /></button><button onClick={() => setDialog(`Edit ${work.title}`)} aria-label={`Edit ${work.title}`}><Pencil size={14} /></button></div></div></div>
-            </article>
-          ))}
-          {!visibleWorks.length && <div className="empty-state"><h2>No matching works</h2><p>Try changing the search or publication filter.</p></div>}
-          <button className="link-another" onClick={() => setDialog('Link Another Work')}><Link2 size={22} /><strong>Link Another Work</strong><span>Add an existing project-linked or standalone work to this room.</span></button>
-        </div>
-      </section>
-      {dialog && <PlaceholderDialog title={dialog} onClose={() => setDialog(null)} />}
-    </div>
-  )
+    {dialog?.type === 'room' && <CmsDialog title={dialog.item ? `Edit ${dialog.item.name}` : 'Add Room Category'} onClose={() => setDialog(null)}><AsyncForm onClose={close} danger={dialog.item ? { label: 'Delete category', action: () => deleteRoomCategory(dialog.item!.id) } : undefined} onSubmit={async (form) => { const name = value(form, 'name'); await saveRoomCategory({ name, slug: value(form, 'slug') || slugify(name), description: value(form, 'description') || null, zone_label: value(form, 'zone_label') || null, status: value(form, 'status') as ContentStatus, sort_order: Number(value(form, 'sort_order') || 0) }, dialog.item?.id) }}><div className="cms-dialog__grid"><label className="field"><span>Name</span><input name="name" required defaultValue={dialog.item?.name} /></label><label className="field"><span>Slug</span><input name="slug" defaultValue={dialog.item?.slug} /></label><label className="field"><span>Zone label</span><input name="zone_label" defaultValue={dialog.item?.zone_label ?? ''} /></label><label className="field"><span>Sort order</span><input type="number" name="sort_order" defaultValue={dialog.item?.sort_order ?? 0} /></label><StatusField value={dialog.item?.status} /><label className="field field--wide"><span>Description</span><textarea name="description" defaultValue={dialog.item?.description ?? ''} /></label></div></AsyncForm></CmsDialog>}
+    {dialog?.type === 'projectRoom' && room && <CmsDialog title={`Assign ${room.name} to Project`} onClose={() => setDialog(null)}><AsyncForm onClose={close} onSubmit={async (form) => { await saveProjectRoom({ project_id: value(form, 'project_id'), room_category_id: room.id, title: value(form, 'title') || null, description: value(form, 'description') || null, sort_order: Number(value(form, 'sort_order') || 0) }) }}><div className="cms-dialog__grid"><label className="field field--wide"><span>Project</span><select name="project_id" required><option value="">Select project</option>{data?.projects.map((item) => <option key={item.id} value={item.id}>{item.title}</option>)}</select></label><label className="field"><span>Display title</span><input name="title" /></label><label className="field"><span>Sort order</span><input type="number" name="sort_order" defaultValue="0" /></label><label className="field field--wide"><span>Description</span><textarea name="description" /></label></div></AsyncForm></CmsDialog>}
+    {dialog?.type === 'work' && room && <CmsDialog title={dialog.item ? `Edit ${dialog.item.title}` : `Add Work to ${room.name}`} onClose={() => setDialog(null)}><AsyncForm onClose={close} danger={dialog.item ? { label: 'Delete work', action: () => deleteWork(dialog.item!.id) } : undefined} onSubmit={async (form) => { const projectRoomId = value(form, 'project_room_id') || null; const projectRoom = data?.projectRooms.find((item) => item.id === projectRoomId); await saveWork({ title: value(form, 'title'), slug: value(form, 'slug') || null, summary: value(form, 'summary') || null, specification: value(form, 'specification') || null, project_id: projectRoom?.project_id ?? null, project_room_id: projectRoomId, room_category_id: room.id, status: value(form, 'status') as ContentStatus, cover_asset_id: null, sort_order: Number(value(form, 'sort_order') || 0) }, dialog.item?.id) }}><div className="cms-dialog__grid"><label className="field"><span>Title</span><input name="title" required defaultValue={dialog.item?.title} /></label><label className="field"><span>Slug</span><input name="slug" defaultValue={dialog.item?.slug ?? ''} /></label><label className="field field--wide"><span>Project room (optional)</span><select name="project_room_id" defaultValue={dialog.item?.project_room_id ?? ''}><option value="">Standalone work</option>{data?.projectRooms.filter((item) => item.room_category_id === room.id).map((item) => <option key={item.id} value={item.id}>{data.projects.find((project) => project.id === item.project_id)?.title}</option>)}</select></label><label className="field"><span>Sort order</span><input type="number" name="sort_order" defaultValue={dialog.item?.sort_order ?? 0} /></label><StatusField value={dialog.item?.status} /><label className="field field--wide"><span>Summary</span><textarea name="summary" defaultValue={dialog.item?.summary ?? ''} /></label><label className="field field--wide"><span>Specification</span><textarea name="specification" defaultValue={dialog.item?.specification ?? ''} /></label></div></AsyncForm></CmsDialog>}
+  </div>
 }

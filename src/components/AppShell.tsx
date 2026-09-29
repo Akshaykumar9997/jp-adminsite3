@@ -2,6 +2,7 @@ import { Bell, Boxes, ExternalLink, Handshake, Image, LayoutDashboard, LogOut, M
 import { useEffect, useState } from 'react'
 import { NavLink, Outlet, useLocation } from 'react-router-dom'
 import { logoUrl } from '../data/mockData'
+import { useAuth } from '../auth/AuthProvider'
 
 const contentItems = [
   { label: 'Rooms & Categories', icon: Boxes, to: '/rooms' },
@@ -14,6 +15,9 @@ const contentItems = [
 export function AppShell() {
   const [menuOpen, setMenuOpen] = useState(false)
   const { pathname } = useLocation()
+  const { signOut, user } = useAuth()
+  const adminLabel = user?.email?.split('@')[0] || 'Administrator'
+  const initials = adminLabel.slice(0, 2).toUpperCase()
 
   useEffect(() => {
     window.scrollTo({ top: 0, left: 0 })
@@ -35,9 +39,9 @@ export function AppShell() {
           <NavLink to="/settings" onClick={() => setMenuOpen(false)}><Settings size={18} />Settings</NavLink>
         </nav>
         <div className="sidebar__profile">
-          <span className="avatar">VP</span>
-          <span><strong>Vikram Patel</strong><small>Admin</small></span>
-          <LogOut size={17} />
+          <span className="avatar">{initials}</span>
+          <span title={user?.email}><strong>{adminLabel}</strong><small>Admin</small></span>
+          <button className="sidebar__logout" aria-label="Sign out" title="Sign out" onClick={() => void signOut()}><LogOut size={17} /></button>
         </div>
       </aside>
 
