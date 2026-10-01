@@ -1,7 +1,7 @@
 export type OperationState = 'idle' | 'pending' | 'success' | 'error'
 export class UserError extends Error {}
 export function friendlyError(error: unknown, action = 'complete this action') {
-  console.error(`[CMS] Unable to ${action}`, error)
+  console.error(`[Admin site] Unable to ${action}`, error)
   if (error instanceof UserError) return error.message
   const message = error instanceof Error ? error.message : String(error)
   if (!navigator.onLine || /network|fetch|connection/i.test(message))

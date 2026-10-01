@@ -147,8 +147,6 @@ td { padding: 12px 14px; border-top: 1px solid var(--border-soft); color: #41475
 .status i { width: 5px; height: 5px; border-radius: 50%; background: #7b8190; }
 .status--published { border-color: #dbe1ff; color: #003ea8; background: #eff4ff; }
 .status--published i { background: #316bf3; }
-.status--draft { border-color: #ffdad6; color: #93000a; background: #fffbff; }
-.status--draft i { background: var(--primary); }
 .panel-footer { min-height: 48px; display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 0 14px; border-top: 1px solid var(--border); color: #7b8190; font-size: 9px; }
 .panel-footer div { display: flex; align-items: center; gap: 8px; }
 .panel-footer button { display: inline-flex; align-items: center; gap: 3px; padding: 4px 6px; border: 0; background: transparent; color: #414755; font-size: 9px; }

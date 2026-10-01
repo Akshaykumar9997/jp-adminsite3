@@ -8,8 +8,8 @@ export function DashboardPage() {
   const navigate = useNavigate()
   const { data, error, loading, reload } = useAsyncData(loadCms)
   return (
-    <div className="page">
-      <div className="page-heading">
+    <div className="page gallery-page">
+      <div className="page-heading gallery-heading">
         <div>
           <h1>Overview</h1>
           <p>Room-based works and the content available on your website.</p>

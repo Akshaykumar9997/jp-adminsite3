@@ -9,6 +9,8 @@ import type {
   Work,
 } from './database.types'
 import { UserError } from './feedback'
+import { moveToTrash } from './trash'
+import { previewCache } from './cache'
 export type ContentKind = 'work' | 'room' | 'material' | 'partner'
 export type MediaItem = {
   owner_kind: string
@@ -17,6 +19,7 @@ export type MediaItem = {
   sort_order: number
 }
 export type ContentRecord = {
+  deleted_at?: string | null
   id: string
   title: string
   status: ContentStatus
@@ -35,7 +38,7 @@ export const tiers = [
 export const client = () => {
   if (!supabase)
     throw new UserError(
-      'The CMS connection is not configured. Contact your administrator.',
+      'The Admin site connection is not configured. Contact your administrator.',
     )
   return supabase
 }
@@ -49,7 +52,7 @@ export function check(error: { message: string; code?: string } | null) {
     /not exist|schema cache|find/.test(error.message)
   )
     throw new UserError(
-      'This CMS version requires the approved showcase backend update. Contact your administrator.',
+      'This Admin site version requires the approved showcase backend update. Contact your administrator.',
     )
   const messages: Record<string, string> = {
     'media is private or not ready':
@@ -95,13 +98,42 @@ export async function loadCms() {
     cmsDb().from('media_items').select('*').order('sort_order'),
   ])
   results.forEach((r) => check(r.error))
+  const tables = [
+    'works',
+    'room_categories',
+    'materials',
+    'partners',
+    'media_assets',
+  ] as const
+  const trash = results.slice(0, 5).flatMap((result, index) =>
+    (result.data ?? []).flatMap((raw) => {
+      const row = raw as unknown as {
+        id: string
+        title?: string
+        name?: string
+        deleted_at?: string
+      }
+      return row.deleted_at
+        ? [
+            {
+              id: row.id,
+              title: row.title ?? row.name ?? 'Untitled',
+              deleted_at: row.deleted_at,
+              table: tables[index],
+              record: raw,
+            },
+          ]
+        : []
+    }),
+  )
   return {
-    works: results[0].data as Work[],
-    rooms: results[1].data as RoomCategory[],
-    materials: results[2].data as Material[],
-    partners: results[3].data as Partner[],
-    assets: results[4].data as MediaAsset[],
+    works: (results[0].data as Work[]).filter((row) => !row.deleted_at),
+    rooms: (results[1].data as RoomCategory[]).filter((row) => !row.deleted_at),
+    materials: (results[2].data as Material[]).filter((row) => !row.deleted_at),
+    partners: (results[3].data as Partner[]).filter((row) => !row.deleted_at),
+    assets: (results[4].data as MediaAsset[]).filter((row) => !row.deleted_at),
     media: results[5].data as MediaItem[],
+    trash,
   }
 }
 export async function saveContent(
@@ -128,13 +160,7 @@ export async function removeContent(kind: ContentKind, id: string) {
     material: 'materials',
     partner: 'partners',
   } as const
-  const result = await cmsDb()
-    .from(table[kind])
-    .delete()
-    .eq('id', id)
-    .select('id')
-    .single()
-  check(result.error)
+  await moveToTrash(table[kind], id)
 }
 export async function reorderMedia(
   kind: ContentKind,
@@ -148,20 +174,17 @@ export async function reorderMedia(
   })
   check(result.error)
 }
-export async function mediaUrl(asset: MediaAsset) {
-  const result = await client()
-    .storage.from('showcase-media')
-    .createSignedUrl(asset.storage_path, 300)
-  check(result.error)
-  return result.data!.signedUrl
-}
-export async function setVideoPoster(
-  video: MediaAsset,
-  poster: MediaAsset | null,
-) {
-  const result = await cmsDb().rpc('set_video_poster', {
-    p_video: video.id,
-    p_poster: poster?.id ?? null,
+export const previewKey = (asset: MediaAsset) =>
+  `${asset.id}:${asset.storage_path}:${asset.updated_at}`
+export const cachedMediaUrl = (asset: MediaAsset) =>
+  previewCache.peek(previewKey(asset))
+export async function mediaUrl(asset: MediaAsset, retry = false) {
+  if (retry) previewCache.clear()
+  return previewCache.get(previewKey(asset), async () => {
+    const result = await client()
+      .storage.from('showcase-media')
+      .createSignedUrl(asset.storage_path, 300)
+    check(result.error)
+    return result.data!.signedUrl
   })
-  check(result.error)
 }

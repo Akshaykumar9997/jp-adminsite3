@@ -1,5 +1,5 @@
 import { useRef, useState, type FormEvent, type ReactNode } from 'react'
-import { Button } from './ui'
+import { Button, Dropdown } from './ui'
 import {
   Dialog,
   EmptyState,
@@ -51,10 +51,16 @@ export function AsyncForm({
   children: ReactNode
   submitLabel?: string
   successMessage?: string
-  danger?: { label: string; action: () => Promise<void> }
+  danger?: {
+    label: string
+    action: () => Promise<void | string>
+    message?: string
+    confirmLabel?: string
+    success?: string
+  }
 }) {
   const operation = useOperation()
-  const { confirm, hasUnsaved } = useFeedback()
+  const { confirm, hasUnsaved, notify } = useFeedback()
   const [action, setAction] = useState<'save' | 'delete' | 'publish'>('save')
   const [dirty, setDirty] = useState(false)
   const [errors, setErrors] = useState<Record<string, string>>({})
@@ -70,6 +76,10 @@ export function AsyncForm({
           ? 'Please enter a valid email address.'
           : ''
     el.setAttribute('aria-invalid', String(!!error))
+    const dropdown = el
+      .closest('.ui-dropdown')
+      ?.querySelector('[role=combobox]')
+    dropdown?.setAttribute('aria-invalid', String(!!error))
     const parent = el.closest('label')
     let message = parent?.querySelector('.field-error')
     if (error && !message) {
@@ -79,6 +89,7 @@ export function AsyncForm({
       message.setAttribute('role', 'alert')
       parent?.append(message)
       el.setAttribute('aria-describedby', message.id)
+      dropdown?.setAttribute('aria-describedby', message.id)
     }
     if (message) message.textContent = error
     setErrors((current) => {
@@ -103,7 +114,14 @@ export function AsyncForm({
       })
     setErrors(invalid)
     if (Object.keys(invalid).length) {
-      ref.current?.querySelector<HTMLElement>('[aria-invalid="true"]')?.focus()
+      const first = ref.current?.querySelector<HTMLElement>(
+        '[aria-invalid="true"]',
+      )
+      const focusTarget =
+        first
+          ?.closest('.ui-dropdown')
+          ?.querySelector<HTMLElement>('[role=combobox]') ?? first
+      focusTarget?.focus()
       return
     }
     const form = new FormData(event.currentTarget)
@@ -149,6 +167,7 @@ export function AsyncForm({
           validate(el)
       }}
       onInput={(event) => {
+        setDirty(true)
         const el = event.target
         if (
           (el instanceof HTMLInputElement ||
@@ -174,7 +193,8 @@ export function AsyncForm({
         {danger && (
           <Button
             className="button--danger"
-            busy={operation.pending}
+            busy={operation.pending && action === 'delete'}
+            disabled={operation.pending}
             onClick={() => {
               setAction('delete')
               void operation.run(
@@ -183,19 +203,21 @@ export function AsyncForm({
                     !(await confirm({
                       title: danger.label,
                       message:
-                        'This removes the item and its showcase associations. This action cannot be undone.',
-                      confirmLabel: 'Delete',
+                        danger.message ??
+                        'Move this item to Trash? Its files and associations will be retained for restoration.',
+                      confirmLabel: danger.confirmLabel ?? 'Move to Trash',
                       destructive: true,
                     }))
                   )
                     return false
-                  await danger.action()
+                  const warning = await danger.action()
+                  if (warning) notify(warning, 'warning')
                   setDirty(false)
                   onClose()
                 },
                 {
                   action: 'delete this item',
-                  success: 'Item deleted successfully.',
+                  success: danger.success ?? 'Item moved to Trash.',
                 },
               )
             }}
@@ -209,13 +231,16 @@ export function AsyncForm({
         <Button disabled={operation.pending} onClick={() => void cancel()}>
           Cancel
         </Button>
-        <Button type="submit" variant="primary" busy={operation.pending}>
-          {operation.pending
-            ? action === 'delete'
-              ? 'Deleting…'
-              : action === 'publish'
-                ? 'Publishing…'
-                : 'Saving changes…'
+        <Button
+          type="submit"
+          variant="primary"
+          busy={operation.pending && action !== 'delete'}
+          disabled={operation.pending}
+        >
+          {operation.pending && action !== 'delete'
+            ? action === 'publish'
+              ? 'Publishing…'
+              : 'Saving changes…'
             : operation.state === 'error'
               ? 'Retry save'
               : submitLabel}
@@ -225,24 +250,29 @@ export function AsyncForm({
   )
 }
 export function StatusField({
-  value = 'draft',
+  value = 'archived',
   onChange,
 }: {
   value?: ContentStatus
   onChange?: (status: ContentStatus) => void
 }) {
+  const [status, setStatus] = useState<ContentStatus>(value ?? 'archived')
   return (
     <label className="field">
       <span>Visibility</span>
-      <select
+      <Dropdown
         name="status"
-        defaultValue={value}
-        onChange={(e) => onChange?.(e.target.value as ContentStatus)}
-      >
-        <option value="draft">Draft — only admins</option>
-        <option value="published">Published — visible on website</option>
-        <option value="archived">Archived — hidden</option>
-      </select>
+        label="Visibility"
+        value={status}
+        onChange={(next) => {
+          setStatus(next as ContentStatus)
+          onChange?.(next as ContentStatus)
+        }}
+        options={[
+          { value: 'published', label: 'Published — visible on website' },
+          { value: 'archived', label: 'Archived — admins only' },
+        ]}
+      />
     </label>
   )
 }

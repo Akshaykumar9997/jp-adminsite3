@@ -2,7 +2,7 @@ import { LockKeyhole, Mail } from 'lucide-react'
 import { useState, type FormEvent } from 'react'
 import { Navigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../auth/AuthProvider'
-import { logoUrl } from '../data/mockData'
+import { logoUrl } from '../lib/branding'
 import { Button } from '../components/ui'
 
 type LoginLocationState = {
@@ -57,7 +57,7 @@ export function LoginPage() {
           Authorized administrators can manage the portfolio, media, materials,
           collaborators, and publishing workflow.
         </p>
-        <small>Site 3 • Internal Admin CMS</small>
+        <small>JP Aluminium • Admin site</small>
       </section>
 
       <section className="login-panel">
@@ -165,7 +165,7 @@ export function LoginPage() {
               type="submit"
               busy={busy}
             >
-              {busy ? 'Verifying access…' : 'Sign in to CMS'}
+              {busy ? 'Verifying access…' : 'Sign in to Admin site'}
             </Button>
           </form>
 

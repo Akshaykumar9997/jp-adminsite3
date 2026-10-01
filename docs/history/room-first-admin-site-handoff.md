@@ -1,4 +1,6 @@
-# Room-first CMS — implementation and verification
+> Historical implementation record. This is not the current UI specification; see the root README and current verification reports.
+
+# Room-first Admin site — implementation and verification
 
 Implemented 1 October 2026 in Site 3; the scoped database migration is applied to Supabase project `xssjgzzhcudktrkruitb`. Frontend changes are local, not deployed.
 
@@ -23,8 +25,8 @@ Implemented 1 October 2026 in Site 3; the scoped database migration is applied t
 
 Migration source: `supabase/migrations/20261001045730_room_first_cms.sql`, applied as `room_first_cms`.
 
-- Revokes CMS-role execution of legacy Homepage create/save/publish functions.
-- Revokes CMS-role insert/update/delete on Settings and legacy landing-version/section/featured-project tables.
+- Revokes Admin site-role execution of legacy Homepage create/save/publish functions.
+- Revokes Admin site-role insert/update/delete on Settings and legacy landing-version/section/featured-project tables.
 - Adds `showcase.reorder_rooms(uuid[])` and `showcase.reorder_works(uuid,uuid[])`. Both require `public.is_admin()`, validate complete distinct sets, use transaction locks and preserve auditing.
 - Adds an append-position trigger for new/moved work; ordinary work edits keep their position. Simultaneous inserts can share a position and are deterministically ordered by ID until explicitly reordered.
 - No tables, existing content, files, audit history or unrelated business data were deleted. Legacy tables/read-only compatibility remain because they can still participate in media/publication safeguards.
@@ -54,4 +56,4 @@ The tests do not establish universal device coverage. This turn did not repeat h
 2. Start a separate Vite process on 5174 with process-only `VITE_SUPABASE_URL=http://127.0.0.1:54321` and `VITE_SUPABASE_PUBLISHABLE_KEY=local-publishable-test-key`.
 3. Run `npm run test:browser` with Playwright available on Node's package path. The suite checks the frontend connection before allowing any writes.
 
-The original seven reviewed migrations remain checksum-locked and unchanged. Simplicity and Supabase skills guided reuse of existing forms, native dialogs and security boundaries rather than replacement of the CMS or destructive schema redesign.
+The original seven reviewed migrations remain checksum-locked and unchanged. Simplicity and Supabase skills guided reuse of existing forms, native dialogs and security boundaries rather than replacement of the Admin site or destructive schema redesign.

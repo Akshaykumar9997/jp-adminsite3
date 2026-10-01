@@ -6,3 +6,8 @@ dist
 *.local
 *.log
 test-results/
+supabase/.temp/
+supabase/.branches/
+coverage/
+playwright-report/
+*.tsbuildinfo

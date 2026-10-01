@@ -1,4 +1,4 @@
-import { readFile, readdir } from 'node:fs/promises'
+import { readFile, readdir, stat } from 'node:fs/promises'
 import { resolve, extname } from 'node:path'
 const root = resolve(import.meta.dirname, '..'),
   failures = []
@@ -35,12 +35,17 @@ async function scan(directory) {
     }
   }
 }
-for (const directory of ['src', 'dist', '../jpdemo/dist'])
-  await scan(resolve(root, directory))
+await scan(resolve(root, 'src'))
+try {
+  const output = resolve(root, 'dist')
+  if ((await stat(output)).isDirectory()) await scan(output)
+} catch (error) {
+  if (error.code !== 'ENOENT') throw error
+}
 if (failures.length) {
   console.error('FAIL privileged credential pattern in:', ...new Set(failures))
   process.exitCode = 1
 } else
   console.log(
-    'PASS client source and both built sites: no service-role JWT, secret key, private key or embedded database password patterns',
+    'PASS Admin site source and available build: no service-role JWT, secret key, private key or embedded database password patterns',
   )

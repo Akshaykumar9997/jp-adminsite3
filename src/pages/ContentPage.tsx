@@ -6,7 +6,7 @@ import {
   LoadingState,
   StatusField,
 } from '../components/CmsDialog'
-import { Button, StatusBadge } from '../components/ui'
+import { Button, Dropdown, StatusBadge } from '../components/ui'
 import { EmptyState, useUnsaved } from '../components/Feedback'
 import { MediaEditor, MediaPreview } from '../components/MediaEditor'
 import { useUploads } from '../components/UploadManager'
@@ -20,7 +20,7 @@ import {
   type ContentRecord,
 } from '../lib/cms'
 import { UserError } from '../lib/feedback'
-import type { ContentStatus, MediaAsset } from '../lib/database.types'
+import type { ContentStatus } from '../lib/database.types'
 const plural = {
   work: 'Works',
   room: 'Rooms',
@@ -63,27 +63,15 @@ export function ContentEditor({
     item?.cover_asset_id ?? item?.logo_asset_id ?? null,
   )
   const [room, setRoom] = useState(item?.room_category_id ?? defaultRoom ?? '')
+  const [tier, setTier] = useState(item?.tier ?? 'mid')
   const uploads = useUploads()
   const [visibility, setVisibility] = useState<ContentStatus>(
-    item?.status ?? 'draft',
+    item?.status ?? 'archived',
   )
   useUnsaved(
     JSON.stringify(ids) !== JSON.stringify(initial) ||
       cover !== (item?.cover_asset_id ?? item?.logo_asset_id ?? null),
   )
-  const coverOptions =
-    kind === 'room'
-      ? workspace.media
-          .filter(
-            (m) =>
-              m.owner_kind === 'work' &&
-              workspace.works.some(
-                (w) => w.id === m.owner_id && w.room_category_id === item?.id,
-              ),
-          )
-          .map((m) => workspace.assets.find((a) => a.id === m.media_asset_id))
-          .filter((a): a is MediaAsset => !!a)
-      : []
   const chosenRoom = workspace.rooms.find((r) => r.id === room)
   return (
     <CmsDialog
@@ -99,9 +87,9 @@ export function ContentEditor({
         onClose={onClose}
         successMessage={`${singular[kind][0].toUpperCase() + singular[kind].slice(1)} ${item ? 'updated' : 'created'} successfully.`}
         danger={
-          item && (kind !== 'room' || item.is_custom)
+          item
             ? {
-                label: `Delete ${singular[kind]}`,
+                label: 'Move to Trash',
                 action: () => removeContent(kind, item.id),
               }
             : undefined
@@ -128,18 +116,19 @@ export function ContentEditor({
             ),
           ]
           const selectedCover =
-            cover ??
-            ids.find((id) =>
-              all.some((a) => a.id === id && a.kind === 'image'),
-            ) ??
-            null
+            kind === 'room'
+              ? null
+              : (cover ??
+                ids.find((id) =>
+                  all.some((a) => a.id === id && a.kind === 'image'),
+                ) ??
+                null)
           if (kind === 'partner' && status === 'published' && !selectedCover)
             throw new UserError('Choose a logo before publishing this partner.')
           if (
             kind === 'work' &&
             status === 'published' &&
-            chosenRoom?.status !== 'published' &&
-            chosenRoom?.name !== 'Other'
+            chosenRoom?.status !== 'published'
           )
             throw new UserError(
               'Publish the selected room before publishing this work.',
@@ -151,56 +140,51 @@ export function ContentEditor({
               title: value('title'),
               location: value('location'),
               room_category_id: value('room_category_id'),
-              custom_room_name: value('custom_room_name'),
               tier: value('tier'),
               status,
               create: !item,
             },
-            ids,
+            kind === 'room' ? [] : ids,
             selectedCover,
           )
         }}
       >
         <div className="cms-dialog__grid">
           <label className="field field--wide">
-            <span>{kind === 'partner' ? 'Name' : 'Title'} *</span>
+            <span>
+              {kind === 'room'
+                ? 'Room name'
+                : kind === 'partner'
+                  ? 'Name'
+                  : 'Title'}{' '}
+              *
+            </span>
             <input
               name="title"
               data-label={`${singular[kind]} ${kind === 'partner' ? 'name' : 'title'}`}
               required
               defaultValue={item?.title ?? ''}
-              readOnly={kind === 'room' && !!item && !item.is_custom}
             />
           </label>
           {kind === 'work' && (
             <>
               <label className="field" hidden={!!defaultRoom}>
                 <span>Room *</span>
-                <select
+                <Dropdown
                   name="room_category_id"
-                  data-label="a room"
+                  label="Room"
                   required
                   value={room}
-                  onChange={(e) => setRoom(e.target.value)}
-                >
-                  <option value="">Choose a room</option>
-                  {workspace.rooms.map((r) => (
-                    <option value={r.id} key={r.id}>
-                      {r.name}
-                    </option>
-                  ))}
-                </select>
+                  onChange={setRoom}
+                  options={[
+                    { value: '', label: 'Choose a room' },
+                    ...workspace.rooms.map((r) => ({
+                      value: r.id,
+                      label: r.name,
+                    })),
+                  ]}
+                />
               </label>
-              {chosenRoom?.name === 'Other' && (
-                <label className="field">
-                  <span>Custom room name *</span>
-                  <input
-                    name="custom_room_name"
-                    data-label="a custom room name"
-                    required
-                  />
-                </label>
-              )}
               <label className="field">
                 <span>Location *</span>
                 <input
@@ -215,13 +199,13 @@ export function ContentEditor({
           {kind === 'material' && (
             <label className="field">
               <span>Category *</span>
-              <select name="tier" defaultValue={item?.tier ?? 'mid'}>
-                {tiers.map((t) => (
-                  <option key={t.value} value={t.value}>
-                    {t.label}
-                  </option>
-                ))}
-              </select>
+              <Dropdown
+                name="tier"
+                label="Category"
+                value={tier}
+                onChange={setTier}
+                options={tiers}
+              />
             </label>
           )}
           <StatusField value={item?.status} onChange={setVisibility} />
@@ -230,21 +214,22 @@ export function ContentEditor({
             website.
           </p>
         </div>
-        <MediaEditor
-          scope={scope}
-          kind={kind}
-          available={workspace.assets}
-          ids={ids}
-          onChange={setIds}
-          cover={cover}
-          onCover={setCover}
-          coverOptions={coverOptions}
-          persistOrder={
-            !!item &&
-            ids.length === initial.length &&
-            ids.every((id) => initial.includes(id))
-          }
-        />
+        {kind !== 'room' && (
+          <MediaEditor
+            scope={scope}
+            kind={kind}
+            available={workspace.assets}
+            ids={ids}
+            onChange={setIds}
+            cover={cover}
+            onCover={setCover}
+            persistOrder={
+              !!item &&
+              ids.length === initial.length &&
+              ids.every((id) => initial.includes(id))
+            }
+          />
+        )}
       </AsyncForm>
     </CmsDialog>
   )
@@ -292,7 +277,7 @@ export function ContentPage({ kind }: { kind: ContentKind }) {
             {
               {
                 work: 'Room-based work, photography, films and 3D models.',
-                room: 'Room categories, existing image covers and room media.',
+                room: 'Create rooms, set visibility, then add works and their assets.',
                 material:
                   'Three fixed categories. One mixed media collection per material.',
                 partner:
@@ -314,41 +299,32 @@ export function ContentPage({ kind }: { kind: ContentKind }) {
             onChange={(e) => setQuery(e.target.value)}
           />
         </label>
-        <label className="select-control">
-          <select
-            aria-label="Filter visibility"
-            value={status}
-            onChange={(e) => setStatus(e.target.value)}
-          >
-            <option value="all">All visibility</option>
-            <option value="draft">Draft</option>
-            <option value="published">Published</option>
-            <option value="archived">Archived</option>
-          </select>
-        </label>
+        <Dropdown
+          label="Filter visibility"
+          value={status}
+          onChange={setStatus}
+          options={[
+            { value: 'all', label: 'All visibility' },
+            { value: 'published', label: 'Published' },
+            { value: 'archived', label: 'Archived' },
+          ]}
+        />
         {(kind === 'work' || kind === 'material') && (
-          <label className="select-control">
-            <select
-              aria-label={kind === 'work' ? 'Filter room' : 'Filter category'}
-              value={filter}
-              onChange={(e) => setFilter(e.target.value)}
-            >
-              <option value="all">
-                {kind === 'work' ? 'All rooms' : 'All categories'}
-              </option>
-              {kind === 'work'
-                ? data?.rooms.map((r) => (
-                    <option key={r.id} value={r.id}>
-                      {r.name}
-                    </option>
-                  ))
-                : tiers.map((t) => (
-                    <option key={t.value} value={t.value}>
-                      {t.label}
-                    </option>
-                  ))}
-            </select>
-          </label>
+          <Dropdown
+            label={kind === 'work' ? 'Filter room' : 'Filter category'}
+            value={filter}
+            onChange={setFilter}
+            options={[
+              {
+                value: 'all',
+                label: kind === 'work' ? 'All rooms' : 'All categories',
+              },
+              ...(kind === 'work'
+                ? (data?.rooms.map((r) => ({ value: r.id, label: r.name })) ??
+                  [])
+                : tiers),
+            ]}
+          />
         )}
       </div>
       {loading ? (

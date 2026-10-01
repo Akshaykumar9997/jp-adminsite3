@@ -28,7 +28,7 @@ Use existing approved test identities; creating or revoking users is a separate 
 - Anonymous: published public rows only; draft/archived rows absent; all mutations denied; private partner tables denied.
 - Authenticated non-admin: same public reads as anonymous; all showcase mutations, private rows, audit rows, and Storage management denied.
 - Active admin: draft/published/archived rows visible; authorized CRUD, settings, audit reads, and Storage management succeed.
-- Revoked admin: new reads fall back to public visibility; mutations/private data/Storage management fail; the CMS route guard signs out on focus or within 60 seconds.
+- Revoked admin: new reads fall back to public visibility; mutations/private data/Storage management fail; the Admin site route guard signs out on focus or within 60 seconds.
 - Confirm direct updates to landing publication status are denied, while `showcase.publish_landing_version(uuid)` succeeds only for the active admin.
 - Confirm `showcase.save_landing_draft(...)` rejects non-admin and revoked-admin sessions. Force an invalid media UUID in a disposable draft and verify metadata, sections, and featured projects all roll back together.
 
@@ -66,7 +66,7 @@ Use existing approved test identities; creating or revoking users is a separate 
 - Confirm editing records does not clear existing cover/logo asset IDs or reset an existing publication timestamp.
 - Confirm landing publication archives the prior live version and never publishes an unpublished featured project or private/unapproved media.
 - Verify audit actor/action/entity data for base and junction tables. Confirm `cms_settings` uses its key, private details use `partner_id`, and composite associations use both IDs; confirm no password, access token, secret key, or document contents appear.
-- Remove temporary verification records through normal CMS operations only after preserving evidence.
+- Remove temporary verification records through normal Admin site operations only after preserving evidence.
 
 ## 8. Stop conditions
 

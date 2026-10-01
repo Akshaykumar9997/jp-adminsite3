@@ -2,10 +2,11 @@ import { Navigate, Route, Routes } from 'react-router-dom'
 import { AppShell } from './components/AppShell'
 import { DashboardPage } from './pages/DashboardPage'
 import { MediaLibraryPage } from './pages/MediaLibraryPage'
-import { ContentPage } from './pages/ContentPage'
 import { RoomsGalleryPage } from './pages/RoomsGalleryPage'
 import { AuthCallback, RequireAdmin } from './auth/AuthProvider'
 import { LoginPage } from './pages/LoginPage'
+import { MaterialsGalleryPage } from './pages/MaterialsGalleryPage'
+import { TrashPage } from './pages/TrashPage'
 
 export default function App() {
   return (
@@ -20,13 +21,11 @@ export default function App() {
           <Route path="rooms" element={<RoomsGalleryPage />} />
           <Route path="rooms/:roomId" element={<RoomsGalleryPage />} />
           <Route path="media" element={<MediaLibraryPage />} />
-          <Route
-            path="materials"
-            element={<ContentPage key="material" kind="material" />}
-          />
+          <Route path="materials" element={<MaterialsGalleryPage />} />
+          <Route path="trash" element={<TrashPage />} />
           <Route
             path="partners"
-            element={<ContentPage key="partner" kind="partner" />}
+            element={<MaterialsGalleryPage key="partner" kind="partner" />}
           />
           <Route
             path="collaborations"

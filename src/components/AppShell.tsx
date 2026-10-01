@@ -9,10 +9,11 @@ import {
   SlidersHorizontal,
   UserRound,
   X,
+  Trash2,
 } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import { NavLink, Outlet, useLocation } from 'react-router-dom'
-import { logoUrl } from '../data/mockData'
+import { logoUrl } from '../lib/branding'
 import { useAuth } from '../auth/AuthProvider'
 import { useFeedback, useOperation } from './Feedback'
 import { useUploads } from './UploadManager'
@@ -22,6 +23,7 @@ const contentItems = [
   { label: 'Media Library', icon: Image, to: '/media' },
   { label: 'Materials', icon: SlidersHorizontal, to: '/materials' },
   { label: 'Partners', icon: Handshake, to: '/partners' },
+  { label: 'Trash', icon: Trash2, to: '/trash' },
 ]
 
 export function AppShell() {
@@ -180,7 +182,7 @@ export function AppShell() {
           <div className="topbar__actions">
             <span className="environment">
               <i />
-              CMS
+              Admin site
             </span>
             {import.meta.env.VITE_SHOWCASE_SITE_URL && (
               <a
@@ -200,6 +202,14 @@ export function AppShell() {
         <main>
           <Outlet />
         </main>
+        <nav className="gallery-mobile-nav" aria-label="Gallery navigation">
+          {contentItems.map(({ label, icon: Icon, to }) => (
+            <NavLink key={to} to={to}>
+              <Icon size={21} />
+              <span>{label === 'Media Library' ? 'Gallery' : label}</span>
+            </NavLink>
+          ))}
+        </nav>
       </div>
     </div>
   )

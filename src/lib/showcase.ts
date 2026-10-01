@@ -1,5 +1,7 @@
 import type { PostgrestError } from '@supabase/supabase-js'
 import { supabase } from './supabase'
+import { cleanupStorage, deleteRecord } from './deletion'
+import { UserError } from './feedback'
 import type {
   AuditEvent,
   ContentStatus,
@@ -165,13 +167,7 @@ export async function saveProject(input: ProjectInput, id?: string) {
 }
 
 export async function deleteProject(id: string) {
-  const { error } = await db()
-    .from('projects')
-    .delete()
-    .eq('id', id)
-    .select('id')
-    .single()
-  throwIfError(error)
+  await deleteRecord('projects', id)
 }
 
 export async function listRoomCategories() {
@@ -202,13 +198,7 @@ export async function saveRoomCategory(input: RoomCategoryInput, id?: string) {
 }
 
 export async function deleteRoomCategory(id: string) {
-  const { error } = await db()
-    .from('room_categories')
-    .delete()
-    .eq('id', id)
-    .select('id')
-    .single()
-  throwIfError(error)
+  await deleteRecord('room_categories', id)
 }
 
 export async function listProjectRooms() {
@@ -283,13 +273,7 @@ export async function saveWork(input: WorkInput, id?: string) {
 }
 
 export async function deleteWork(id: string) {
-  const { error } = await db()
-    .from('works')
-    .delete()
-    .eq('id', id)
-    .select('id')
-    .single()
-  throwIfError(error)
+  await deleteRecord('works', id)
 }
 
 export async function listMediaAssets() {
@@ -389,20 +373,45 @@ export async function saveMediaMetadata(
 }
 
 export async function deleteMedia(asset: MediaAsset) {
-  const { error } = await db()
+  await deleteRecord('media_assets', asset.id)
+  return cleanupStorage(asset.storage_path)
+}
+
+export async function renameMediaAsset(asset: MediaAsset, input: string) {
+  let filename = input.trim()
+  if (
+    !filename ||
+    filename.length > 240 ||
+    /[<>:"/\\|?*\u0000-\u001f]/.test(filename)
+  )
+    throw new UserError(
+      'Enter a file name of up to 240 characters, without path separators or special filename characters.',
+    )
+  const extension = asset.original_filename.match(/\.[^.]+$/)?.[0] ?? ''
+  if (extension && !filename.toLowerCase().endsWith(extension.toLowerCase()))
+    filename += extension
+  const title = extension
+    ? filename.slice(0, -extension.length).trim()
+    : filename
+  if (!title || filename.length > 240)
+    throw new UserError('Enter a valid name before the file extension.')
+  const { data, error } = await db()
     .from('media_assets')
-    .delete()
+    .update({
+      title,
+      original_filename: filename,
+      updated_at: new Date().toISOString(),
+      updated_by: await actorId(),
+    })
     .eq('id', asset.id)
-    .select('id')
+    .select()
     .single()
   throwIfError(error)
-  const { error: storageError } = await requireClient()
-    .storage.from('showcase-media')
-    .remove([asset.storage_path])
-  if (storageError)
-    throw new Error(
-      `Metadata deleted, but Storage cleanup failed: ${storageError.message}`,
+  if (!data || data.id !== asset.id)
+    throw new UserError(
+      'The name update could not be confirmed. Reload and retry.',
     )
+  return data as MediaAsset
 }
 
 export async function getAdminMediaUrl(asset: MediaAsset) {
@@ -519,13 +528,7 @@ export async function saveMaterialCollection(
 }
 
 export async function deleteMaterialCollection(id: string) {
-  const { error } = await db()
-    .from('material_collections')
-    .delete()
-    .eq('id', id)
-    .select('id')
-    .single()
-  throwIfError(error)
+  await deleteRecord('material_collections', id)
 }
 
 export async function listMaterials() {
@@ -566,13 +569,7 @@ export async function saveMaterial(input: MaterialInput, id?: string) {
 }
 
 export async function deleteMaterial(id: string) {
-  const { error } = await db()
-    .from('materials')
-    .delete()
-    .eq('id', id)
-    .select('id')
-    .single()
-  throwIfError(error)
+  await deleteRecord('materials', id)
 }
 
 export async function listPartners() {
@@ -647,13 +644,7 @@ export async function savePartner(
 }
 
 export async function deletePartner(id: string) {
-  const { error } = await db()
-    .from('partners')
-    .delete()
-    .eq('id', id)
-    .select('id')
-    .single()
-  throwIfError(error)
+  await deleteRecord('partners', id)
 }
 
 export async function assignPartner(
@@ -701,7 +692,7 @@ export async function uploadPrivatePartnerDocument(
       mime_type: file.type || 'application/octet-stream',
       original_filename: file.name,
       byte_size: file.size,
-      status: 'draft',
+      status: 'archived',
       is_publicly_deliverable: false,
       uploaded_by: actor,
       created_by: actor,
@@ -737,27 +728,8 @@ export async function deletePrivatePartnerDocument(
   document: PartnerPrivateDocument,
   asset: MediaAsset,
 ) {
-  const removedDocument = await db()
-    .from('partner_private_documents')
-    .delete()
-    .eq('id', document.id)
-    .select('id')
-    .single()
-  throwIfError(removedDocument.error)
-  const removedAsset = await db()
-    .from('media_assets')
-    .delete()
-    .eq('id', asset.id)
-    .select('id')
-    .single()
-  throwIfError(removedAsset.error)
-  const storage = await requireClient()
-    .storage.from('showcase-media')
-    .remove([asset.storage_path])
-  if (storage.error)
-    throw new Error(
-      `Database records deleted, but Storage cleanup failed: ${storage.error.message}`,
-    )
+  await deleteRecord('partner_private_documents', document.id)
+  return deleteMedia(asset)
 }
 
 export function messageFrom(error: unknown) {

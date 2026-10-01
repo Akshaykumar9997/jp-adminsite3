@@ -7,13 +7,31 @@ import {
   type ReactNode,
 } from 'react'
 import { createPortal } from 'react-dom'
-import { useLocation } from 'react-router-dom'
+import {
+  ChevronDown,
+  ChevronUp,
+  FileImage,
+  Check,
+  Box,
+  XCircle,
+  X,
+} from 'lucide-react'
 import { Button } from './ui'
-import { Progress, useFeedback } from './Feedback'
+import { useFeedback } from './Feedback'
 import { client, cmsDb, check, type ContentKind } from '../lib/cms'
 import type { MediaAsset } from '../lib/database.types'
 import { prepareMedia, validateFile } from '../lib/media-processing'
 import { friendlyError } from '../lib/feedback'
+import {
+  cleanupStorage,
+  forgetCleanup,
+  reserveUploadPath,
+  releaseUploadPath,
+  DELETED_EVENT,
+  type DeletedRecord,
+} from '../lib/deletion'
+import { useAuth } from '../auth/AuthProvider'
+import { dataCache } from '../lib/cache'
 export type UploadState =
   | 'queued'
   | 'uploading'
@@ -30,6 +48,7 @@ export type UploadItem = {
   progress?: number
   transferred?: number
   transferTotal?: number
+  startedAt?: number
   error?: string
   asset?: MediaAsset
   cancellable: boolean
@@ -43,6 +62,46 @@ type UploadContextValue = {
   remove: (id: string) => void
 }
 const UploadContext = createContext<UploadContextValue | null>(null)
+
+function UploadRing({ item }: { item: UploadItem }) {
+  const value =
+    item.state === 'uploading' && item.progress !== undefined
+      ? Math.max(0, Math.min(99, item.progress))
+      : undefined
+  return (
+    <span
+      className={`upload-ring ${item.state === 'queued' ? 'is-waiting' : value === undefined ? 'is-indeterminate' : ''}`}
+      role="progressbar"
+      aria-label={`${item.file.name} ${item.state}`}
+      aria-valuemin={0}
+      aria-valuemax={100}
+      aria-valuenow={item.state === 'queued' ? 0 : value}
+      aria-valuetext={
+        item.state === 'queued'
+          ? 'Waiting to upload'
+          : item.state === 'processing'
+            ? 'Preparing or finishing file'
+            : value === undefined
+              ? 'Uploading'
+              : `${value}% uploaded`
+      }
+    >
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <circle className="upload-ring-track" cx="12" cy="12" r="9" />
+        {item.state !== 'queued' && (
+          <circle
+            className="upload-ring-value"
+            cx="12"
+            cy="12"
+            r="9"
+            pathLength="100"
+            strokeDasharray={`${value ?? 22} 100`}
+          />
+        )}
+      </svg>
+    </span>
+  )
+}
 
 function transfer(
   file: File,
@@ -85,6 +144,7 @@ function transfer(
     xhr.onloadend = () => signal.removeEventListener('abort', abort)
     signal.addEventListener('abort', abort, { once: true })
     if (signal.aborted) {
+      signal.removeEventListener('abort', abort)
       reject(new DOMException('Cancelled', 'AbortError'))
       return
     }
@@ -95,13 +155,23 @@ export function UploadProvider({ children }: { children: ReactNode }) {
   const [items, setItems] = useState<UploadItem[]>([])
   const current = useRef(items)
   current.current = items
-  const [container, setContainer] = useState<Element>(document.body)
+  const [container] = useState(() => {
+    const layer = document.createElement('div')
+    layer.className = 'upload-layer'
+    layer.popover = 'manual'
+    return layer
+  })
   useEffect(() => {
-    const updateContainer = () =>
-      setContainer(
+    const updateContainer = () => {
+      const parent =
         Array.from(document.querySelectorAll('.native-dialog[open]')).at(-1) ??
-          document.body,
-      )
+        document.body
+      if (container.parentElement !== parent) {
+        parent.append(container)
+        if (container.matches(':popover-open')) container.hidePopover()
+      }
+      if (!container.matches(':popover-open')) container.showPopover()
+    }
     const observer = new MutationObserver(updateContainer)
     observer.observe(document.body, {
       childList: true,
@@ -109,13 +179,31 @@ export function UploadProvider({ children }: { children: ReactNode }) {
       attributes: true,
       attributeFilter: ['open'],
     })
-    return () => observer.disconnect()
+    updateContainer()
+    return () => {
+      observer.disconnect()
+      container.remove()
+    }
+  }, [container])
+  useEffect(() => {
+    const forgetDeleted = (event: Event) => {
+      const { table, id } = (event as CustomEvent<DeletedRecord>).detail
+      if (table === 'media_assets')
+        setItems((previous) => previous.filter((item) => item.asset?.id !== id))
+    }
+    window.addEventListener(DELETED_EVENT, forgetDeleted)
+    return () => window.removeEventListener(DELETED_EVENT, forgetDeleted)
   }, [])
   const running = useRef(new Map<string, AbortController>())
+  const { status } = useAuth()
+  useEffect(() => {
+    if (status === 'unauthenticated') {
+      running.current.forEach((controller) => controller.abort())
+      setItems([])
+    }
+  }, [status])
   const [expanded, setExpanded] = useState(true)
   const { notify } = useFeedback()
-  const location = useLocation()
-  useEffect(() => setExpanded(false), [location.pathname])
   const update = (id: string, patch: Partial<UploadItem>) =>
     setItems((rows) =>
       rows.map((row) => (row.id === id ? { ...row, ...patch } : row)),
@@ -135,6 +223,7 @@ export function UploadProvider({ children }: { children: ReactNode }) {
   }, [active.length])
   const start = async (item: UploadItem) => {
     const controller = new AbortController()
+    let path: string | undefined
     running.current.set(item.id, controller)
     update(item.id, {
       state: 'processing',
@@ -160,12 +249,15 @@ export function UploadProvider({ children }: { children: ReactNode }) {
             : item.kind === 'homepage'
               ? 'landing'
               : 'works'
-      const path = `${prefix}/${item.scope}/${item.id}/${prepared.file.name.normalize('NFKD').replace(/[^a-zA-Z0-9._-]+/g, '-')}`
+      path = `${prefix}/${item.scope}/${item.id}/${prepared.file.name.normalize('NFKD').replace(/[^a-zA-Z0-9._-]+/g, '-')}`
+      await reserveUploadPath(path)
+      controller.signal.throwIfAborted()
       update(item.id, {
         state: 'uploading',
         progress: 0,
         transferred: 0,
         transferTotal: prepared.file.size,
+        startedAt: Date.now(),
       })
       await transfer(
         prepared.file,
@@ -198,7 +290,7 @@ export function UploadProvider({ children }: { children: ReactNode }) {
           width: prepared.width ?? null,
           height: prepared.height ?? null,
           processing_status: 'ready',
-          status: 'draft',
+          status: 'archived',
           is_publicly_deliverable: false,
           uploaded_by: session.data.session.user.id,
           updated_by: session.data.session.user.id,
@@ -207,15 +299,47 @@ export function UploadProvider({ children }: { children: ReactNode }) {
         .select()
         .single()
       check(result.error)
+      forgetCleanup(path)
+      dataCache.clear()
       update(item.id, {
         state: 'completed',
         asset: result.data as MediaAsset,
+        file: new File([], item.file.name, { type: item.file.type }),
         progress: 100,
         transferred: prepared.file.size,
         cancellable: false,
       })
     } catch (error) {
       const cancelled = controller.signal.aborted
+      // A lost metadata response may still have committed. Preserve the file
+      // unless a successful read confirms there is no asset referencing it.
+      if (path) {
+        try {
+          const existing = await cmsDb()
+            .from('media_assets')
+            .select('*')
+            .eq('id', item.id)
+            .maybeSingle()
+          if (!existing.error && existing.data) {
+            dataCache.clear()
+            update(item.id, {
+              state: 'completed',
+              asset: existing.data as MediaAsset,
+              file: new File([], item.file.name, { type: item.file.type }),
+              transferTotal: (existing.data as MediaAsset).byte_size,
+              progress: 100,
+              cancellable: false,
+            })
+            return
+          }
+          if (!existing.error) {
+            const warning = await cleanupStorage(path)
+            if (warning) notify(warning, 'warning')
+          }
+        } catch {
+          /* An uncertain commit is safe to retry with the same asset ID. */
+        }
+      }
       const message = cancelled
         ? undefined
         : friendlyError(error, `upload ${item.file.name}`)
@@ -226,7 +350,9 @@ export function UploadProvider({ children }: { children: ReactNode }) {
       })
       if (!cancelled) notify(`${item.file.name}: ${message}`, 'error')
     } finally {
+      if (path) releaseUploadPath(path)
       running.current.delete(item.id)
+      setItems((previous) => [...previous])
     }
   }
   useEffect(() => {
@@ -276,6 +402,9 @@ export function UploadProvider({ children }: { children: ReactNode }) {
         state: 'queued',
         error: undefined,
         progress: undefined,
+        transferred: 0,
+        transferTotal: undefined,
+        startedAt: undefined,
         cancellable: true,
       })
   }
@@ -302,64 +431,172 @@ export function UploadProvider({ children }: { children: ReactNode }) {
       notify(
         `${ready.length} ${ready.length === 1 ? 'file is' : 'files are'} ready.`,
       )
-      if (!items.some((item) => item.state === 'failed')) setExpanded(false)
     }
   }, [items, active.length, notify])
-  const visibleItems = items.filter(
-    (item) =>
-      !item.dismissed && !['completed', 'cancelled'].includes(item.state),
-  )
+  const visibleItems = items.filter((item) => !item.dismissed)
   const failed = visibleItems.filter((item) => item.state === 'failed').length
-  const measurable = visibleItems.every(
-    (item) =>
-      item.transferTotal !== undefined ||
-      ['failed', 'cancelled'].includes(item.state),
+  const completed = visibleItems.filter(
+    (item) => item.state === 'completed',
+  ).length
+  const transferItems = visibleItems.filter(
+    (item) => !['failed', 'cancelled'].includes(item.state),
   )
-  const totalBytes = visibleItems.reduce(
-    (sum, item) => sum + (item.transferTotal ?? 0),
+  const totalBytes = transferItems.reduce(
+    (sum, item) => sum + (item.transferTotal ?? item.file.size),
     0,
   )
-  const uploadedBytes = visibleItems.reduce(
-    (sum, item) => sum + (item.transferred ?? 0),
+  const uploadedBytes = transferItems.reduce(
+    (sum, item) =>
+      sum +
+      (item.state === 'completed'
+        ? (item.transferTotal ?? item.file.size)
+        : (item.transferred ?? 0)),
     0,
   )
+  const rate = active.reduce(
+    (sum, item) =>
+      sum +
+      (item.state === 'uploading' && item.startedAt
+        ? (item.transferred ?? 0) /
+          Math.max(1, (Date.now() - item.startedAt) / 1000)
+        : 0),
+    0,
+  )
+  const seconds =
+    rate > 0 ? Math.ceil((totalBytes - uploadedBytes) / rate) : undefined
+  const dismiss = () => {
+    if (active.length) {
+      setExpanded(false)
+      return
+    }
+    setItems((previous) =>
+      previous
+        .filter((item) => item.state === 'completed')
+        .map((item) => ({ ...item, dismissed: true })),
+    )
+  }
   return (
     <UploadContext.Provider value={{ items, enqueue, cancel, retry, remove }}>
       {children}
       {visibleItems.length > 0 &&
         createPortal(
           <aside className="upload-center" aria-label="Upload Center">
-            <button
-              className="upload-center-heading"
-              aria-expanded={expanded}
-              onClick={() => setExpanded(!expanded)}
-            >
-              Uploads · {active.length} active
-              {failed > 0 ? ` · ${failed} need attention` : ''}{' '}
-              <span>{expanded ? '−' : '+'}</span>
-            </button>
+            <div className="upload-center-header">
+              <span role="status">
+                {active.length
+                  ? `Uploading ${active.length} ${active.length === 1 ? 'item' : 'items'}`
+                  : failed
+                    ? `${failed} ${failed === 1 ? 'upload needs' : 'uploads need'} attention`
+                    : completed
+                      ? `${completed} ${completed === 1 ? 'upload complete' : 'uploads complete'}`
+                      : 'Uploads cancelled'}
+              </span>
+              <button
+                className="upload-center-heading"
+                aria-expanded={expanded}
+                aria-label={expanded ? 'Collapse uploads' : 'Expand uploads'}
+                onClick={() => setExpanded(!expanded)}
+              >
+                {expanded ? <ChevronDown size={20} /> : <ChevronUp size={20} />}
+              </button>
+              <button
+                className="upload-icon-button"
+                aria-label={
+                  active.length ? 'Minimize uploads' : 'Dismiss uploads'
+                }
+                onClick={dismiss}
+              >
+                <X size={20} />
+              </button>
+            </div>
             {expanded && (
               <div className="upload-center-body">
-                <Progress
-                  value={
-                    measurable && totalBytes
-                      ? Math.min(
-                          100,
-                          Math.round((uploadedBytes / totalBytes) * 100),
-                        )
-                      : undefined
-                  }
-                  label="Overall file transfer progress"
-                />
-                <p className="muted">
-                  Keep this tab open. You can navigate the CMS during uploads.
-                </p>
+                {active.length > 0 && (
+                  <div className="upload-summary">
+                    <span>
+                      {active.length
+                        ? seconds !== undefined
+                          ? seconds < 60
+                            ? 'Less than a minute left'
+                            : `${Math.ceil(seconds / 60)} min left…`
+                          : active.some((item) => item.state === 'uploading')
+                            ? 'Estimating time left…'
+                            : 'Preparing / finishing files…'
+                        : ''}
+                    </span>
+                    {active.some((item) => item.cancellable) && (
+                      <button
+                        onClick={() =>
+                          active.forEach((item) => cancel(item.id))
+                        }
+                      >
+                        Cancel
+                      </button>
+                    )}
+                  </div>
+                )}
                 <ul>
                   {visibleItems.map((item) => (
-                    <li key={item.id}>
-                      <strong>{item.file.name}</strong>
+                    <li key={item.id} data-state={item.state}>
+                      <div className="upload-file-heading">
+                        <span
+                          className={`upload-file-icon ${item.state !== 'completed' ? 'is-pending' : ''}`}
+                          aria-hidden="true"
+                        >
+                          {item.file.name.toLowerCase().endsWith('.mp4') ? (
+                            <svg width="18" height="18" viewBox="0 0 20 20">
+                              <path fill="currentColor" d="M2 4h16v13H2z" />
+                              <path
+                                stroke="#fff"
+                                strokeWidth="1.6"
+                                d="m4 4 2 4m3-4 2 4m3-4 2 4"
+                              />
+                            </svg>
+                          ) : item.file.name.toLowerCase().endsWith('.glb') ? (
+                            <Box size={18} />
+                          ) : (
+                            <FileImage size={18} />
+                          )}
+                        </span>
+                        <strong title={item.file.name}>{item.file.name}</strong>
+                        {item.state === 'completed' ? (
+                          <span
+                            className="upload-complete-icon"
+                            role="img"
+                            aria-label="Upload complete"
+                          >
+                            <Check size={15} strokeWidth={3} />
+                          </span>
+                        ) : ['failed', 'cancelled'].includes(item.state) ? (
+                          <XCircle
+                            className={
+                              item.state === 'failed'
+                                ? 'upload-state--failed'
+                                : 'upload-cancelled-icon'
+                            }
+                            size={20}
+                          />
+                        ) : item.cancellable ? (
+                          <button
+                            type="button"
+                            className="upload-cancel-file"
+                            aria-label={`Cancel upload ${item.file.name}`}
+                            title="Cancel upload"
+                            onClick={() => cancel(item.id)}
+                          >
+                            <UploadRing item={item} />
+                            <XCircle
+                              className="upload-cancel-hover"
+                              size={20}
+                              aria-hidden="true"
+                            />
+                          </button>
+                        ) : (
+                          <UploadRing item={item} />
+                        )}
+                      </div>
                       <span
-                        className={`upload-state upload-state--${item.state}`}
+                        className={`upload-state sr-only upload-state--${item.state}`}
                       >
                         {
                           {
@@ -378,36 +615,23 @@ export function UploadProvider({ children }: { children: ReactNode }) {
                           }[item.state]
                         }
                       </span>
-                      {['uploading', 'processing'].includes(item.state) && (
-                        <Progress
-                          value={
-                            item.state === 'uploading'
-                              ? item.progress
-                              : undefined
-                          }
-                          label={`${item.file.name} ${item.state}`}
-                        />
-                      )}
                       {item.error && (
                         <p className="field-error">{item.error}</p>
                       )}
-                      <div>
-                        {item.cancellable && (
-                          <Button onClick={() => cancel(item.id)}>
-                            Cancel
-                          </Button>
-                        )}
-                        {['failed', 'cancelled'].includes(item.state) && (
-                          <Button onClick={() => retry(item.id)}>
-                            Retry upload
-                          </Button>
-                        )}
-                        {!active.includes(item) && (
-                          <Button onClick={() => remove(item.id)}>
-                            {item.state === 'completed' ? 'Dismiss' : 'Remove'}
-                          </Button>
-                        )}
-                      </div>
+                      {['failed', 'cancelled'].includes(item.state) && (
+                        <div className="upload-actions">
+                          {['failed', 'cancelled'].includes(item.state) && (
+                            <Button onClick={() => retry(item.id)}>
+                              Retry upload
+                            </Button>
+                          )}
+                          {!active.includes(item) && (
+                            <Button onClick={() => remove(item.id)}>
+                              Remove
+                            </Button>
+                          )}
+                        </div>
+                      )}
                     </li>
                   ))}
                 </ul>

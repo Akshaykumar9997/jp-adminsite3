@@ -52,9 +52,27 @@ await db.exec(
     'utf8',
   ),
 )
+await db.exec(
+  await readFile(
+    resolve(root, 'supabase/migrations/20261001165025_gallery_trash.sql'),
+    'utf8',
+  ),
+)
+await db.exec(
+  await readFile(
+    resolve(root, 'supabase/migrations/20261001175929_video_first_frame.sql'),
+    'utf8',
+  ),
+)
 await db.query("insert into identity.profiles(id,role) values($1,'admin')", [
   admin,
 ])
+await db.exec(
+  await readFile(
+    resolve(root, 'supabase/migrations/20261001192454_room_visibility.sql'),
+    'utf8',
+  ),
+)
 const image = await readFile(resolve(root, 'public/assets/project-01.jpg'))
 const fixtureId = '82000000-0000-4000-8000-000000000001'
 objects.set('works/local/cover.jpg', { body: image, type: 'image/jpeg' })
@@ -92,6 +110,11 @@ async function request(req, res) {
       await db.query('delete from showcase.media_assets where id<>$1', [
         fixtureId,
       ])
+      // Historical room names are fixtures for legacy regression tests only.
+      // Production no longer has protected/predefined room semantics.
+      await db.exec(
+        "insert into showcase.room_categories(name,slug,status) select name,lower(replace(name,' ','-')),'published'::showcase.content_status from unnest(array['Hall','Kitchen','Bedroom','Dining','Bathroom','Balcony','Pooja Room','Other']) name",
+      )
       nextFailure = null
       delay = 0
       return send(res, 200, { ok: true })

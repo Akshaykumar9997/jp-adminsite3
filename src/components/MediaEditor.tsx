@@ -5,7 +5,8 @@ import {
   useState,
   type CSSProperties,
 } from 'react'
-import { Button } from './ui'
+import { Button, Dropdown } from './ui'
+import { GalleryViewer } from './Gallery'
 import {
   ArrowLeft,
   ArrowRight,
@@ -17,9 +18,8 @@ import {
 } from 'lucide-react'
 import { Dialog, EmptyState, Loader, useOperation } from './Feedback'
 import {
-  cmsDb,
-  check,
   mediaUrl,
+  cachedMediaUrl,
   reorderMedia,
   type ContentKind,
 } from '../lib/cms'
@@ -35,15 +35,16 @@ export function MediaPreview({
   asset: MediaAsset
   controls?: boolean
 }) {
-  const [url, setUrl] = useState<string>()
+  const [url, setUrl] = useState<string | undefined>(() =>
+    cachedMediaUrl(asset),
+  )
   const [failed, setFailed] = useState(false)
   const [attempt, setAttempt] = useState(0)
-  const [poster, setPoster] = useState<string>()
   useEffect(() => {
     let active = true
-    setUrl(undefined)
+    setUrl(cachedMediaUrl(asset))
     setFailed(false)
-    void mediaUrl(asset)
+    void mediaUrl(asset, attempt > 0)
       .then((value) => {
         if (active) setUrl(value)
       })
@@ -53,30 +54,7 @@ export function MediaPreview({
     return () => {
       active = false
     }
-  }, [asset.id, asset.storage_path, attempt])
-  useEffect(() => {
-    let active = true
-    setPoster(undefined)
-    if (asset.poster_asset_id)
-      void Promise.resolve(
-        cmsDb()
-          .from('media_assets')
-          .select('*')
-          .eq('id', asset.poster_asset_id)
-          .single(),
-      )
-        .then(async (result) => {
-          check(result.error)
-          const value = await mediaUrl(result.data as MediaAsset)
-          if (active) setPoster(value)
-        })
-        .catch(() => {
-          /* Optional poster; preserve the native first-frame fallback. */
-        })
-    return () => {
-      active = false
-    }
-  }, [asset.poster_asset_id])
+  }, [asset.id, asset.storage_path, asset.updated_at, attempt])
   if (failed)
     return (
       <div className="media-placeholder">
@@ -93,6 +71,7 @@ export function MediaPreview({
         src={url}
         alt={asset.alt_text || asset.title}
         loading="lazy"
+        draggable={false}
         onError={() => setFailed(true)}
       />
     )
@@ -100,10 +79,14 @@ export function MediaPreview({
     return (
       <video
         src={url}
-        poster={poster}
         controls={controls}
         playsInline
         preload="metadata"
+        onLoadedMetadata={(event) => {
+          const video = event.currentTarget
+          if (video.duration > 0)
+            video.currentTime = Math.min(0.001, video.duration / 2)
+        }}
         onError={() => setFailed(true)}
       />
     )
@@ -264,7 +247,6 @@ export function MediaEditor({
         item.scope === scope &&
         queued.current.has(item.id) &&
         item.asset &&
-        ids.includes(item.id) &&
         !seen.current.has(item.id),
     )
     if (!additions.length) return
@@ -274,6 +256,13 @@ export function MediaEditor({
   const assets = ids
     .map((id) => all.find((a) => a.id === id))
     .filter((a): a is MediaAsset => !!a)
+  const availableFiles = all.filter(
+    (asset) =>
+      !asset.storage_path.startsWith('internal/') &&
+      asset.processing_status === 'ready' &&
+      (!(kind === 'partner' || imageOnly) || asset.kind === 'image') &&
+      ['image', 'video', 'model_3d'].includes(asset.kind),
+  )
   const images = [...assets, ...coverOptions].filter(
     (a, i, array) =>
       a.kind === 'image' && array.findIndex((b) => b.id === a.id) === i,
@@ -450,49 +439,40 @@ export function MediaEditor({
       {images.length > 0 && (kind === 'room' || kind === 'partner') && (
         <label className="field">
           <span>{kind === 'partner' ? 'Selected logo' : 'Cover image'}</span>
-          <select
-            aria-label={kind === 'partner' ? 'Selected logo' : 'Cover image'}
+          <Dropdown
+            label={kind === 'partner' ? 'Selected logo' : 'Cover image'}
             value={cover ?? ''}
             disabled={disabled}
-            onChange={(e) => onCover(e.target.value || null)}
-          >
-            <option value="">Use first available image</option>
-            {images.map((asset) => (
-              <option key={asset.id} value={asset.id}>
-                {asset.title}
-              </option>
-            ))}
-          </select>
+            onChange={(value) => onCover(value || null)}
+            options={[
+              { value: '', label: 'Use first available image' },
+              ...images.map((asset) => ({
+                value: asset.id,
+                label: asset.title,
+              })),
+            ]}
+          />
         </label>
       )}
       {library && (
         <Dialog title="Choose showcase media" onClose={() => setLibrary(false)}>
           <div className="mixed-grid library-picker">
-            {all
-              .filter(
-                (asset) =>
-                  !asset.storage_path.startsWith('internal/') &&
-                  asset.processing_status === 'ready' &&
-                  (!(kind === 'partner' || imageOnly) ||
-                    asset.kind === 'image') &&
-                  ['image', 'video', 'model_3d'].includes(asset.kind),
-              )
-              .map((asset) => (
-                <button
-                  key={asset.id}
-                  className="media-pick"
-                  onClick={() => {
-                    onChange([...new Set([...ids, asset.id])])
-                    if (kind === 'partner') onCover(asset.id)
-                    setLibrary(false)
-                  }}
-                >
-                  <MediaPreview asset={asset} />
-                  <strong>{asset.title}</strong>
-                </button>
-              ))}
+            {availableFiles.map((asset) => (
+              <button
+                key={asset.id}
+                className="media-pick"
+                onClick={() => {
+                  onChange([...new Set([...ids, asset.id])])
+                  if (kind === 'partner') onCover(asset.id)
+                  setLibrary(false)
+                }}
+              >
+                <MediaPreview asset={asset} />
+                <strong>{asset.title}</strong>
+              </button>
+            ))}
           </div>
-          {!all.length && (
+          {!availableFiles.length && (
             <EmptyState title="No available files">
               Upload your first file.
             </EmptyState>
@@ -500,11 +480,11 @@ export function MediaEditor({
         </Dialog>
       )}
       {preview && (
-        <Dialog title={preview.title} onClose={() => setPreview(null)}>
-          <div className="large-preview">
-            <MediaPreview asset={preview} controls />
-          </div>
-        </Dialog>
+        <GalleryViewer
+          assets={assets}
+          initialId={preview.id}
+          onClose={() => setPreview(null)}
+        />
       )}
     </section>
   )

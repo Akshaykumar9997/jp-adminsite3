@@ -67,6 +67,6 @@ Run `database/showcase-validation/verify-hosted.sql` read-only and compare the s
 
 For delivery behavior, request the Edge Function with published associated assets and verify image/document expiry, video seeking and HTTP range requests, and GLB loading. Draft, archived, unassigned, internal, and private-document UUIDs must return 404.
 
-Follow `HOSTED_VERIFICATION_CHECKLIST.md` for the complete RLS, Storage, Edge Function, range-request, and administrator workflow matrix. Finally run `npm test`, `npm run test:database`, `npm run test:edge`, `npm run typecheck`, and `npm run build`. Never commit `.env.local`, a database URL, access token, or service-role key.
+Follow `docs/hosted-verification-checklist.md` for the complete RLS, Storage, Edge Function, range-request, and administrator workflow matrix. Finally run `npm test`, `npm run test:database`, `npm run test:edge`, `npm run typecheck`, and `npm run build`. Never commit `.env.local`, a database URL, access token, or service-role key.
 
-Site 2 must consume only published rows from the `showcase` schema and request media through the Edge Function; see `PUBLIC_SHOWCASE_INTEGRATION.md`. Recovery and rollback boundaries are documented in `SHOWCASE_ROLLBACK.md`.
+Site 2 must consume only published rows from the `showcase` schema and request media through the Edge Function; see `docs/public-showcase-integration.md`. Recovery and rollback boundaries are documented in `docs/showcase-rollback.md`.

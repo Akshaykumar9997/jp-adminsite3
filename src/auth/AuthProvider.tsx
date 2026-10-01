@@ -10,6 +10,7 @@ import {
 import { Navigate, Outlet, useLocation } from 'react-router-dom'
 import { Loader, useFeedback } from '../components/Feedback'
 import { supabase, supabaseConfigurationError } from '../lib/supabase'
+import { clearCmsCaches } from '../lib/cache'
 
 type AuthStatus =
   | 'loading'
@@ -78,12 +79,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (session === undefined) return
     if (!session || !supabase) {
+      clearCmsCaches()
       authorizedUser.current = null
       setStatus('unauthenticated')
       return
     }
 
     const client = supabase
+    if (authorizedUser.current !== session.user.id) clearCmsCaches()
     let active = true
     let verifying = false
     if (authorizedUser.current !== session.user.id) setStatus('authorizing')
@@ -115,7 +118,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         )
         return
       }
-      setError('This account is not authorized to access the Admin CMS.')
+      setError('This account is not authorized to access the Admin site.')
+      clearCmsCaches()
       authorizedUser.current = null
       setSession(null)
       setStatus('unauthenticated')
@@ -173,6 +177,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   const signOut = async () => {
+    clearCmsCaches()
     setError(null)
     setStatus('loading')
     if (supabase) await supabase.auth.signOut({ scope: 'local' })

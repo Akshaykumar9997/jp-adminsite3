@@ -1,25 +1,40 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
+import { Link } from 'react-router-dom'
+import { Trash2, Upload, Pencil } from 'lucide-react'
+import { CLEANUP_EVENT, pendingCleanup, retryCleanup } from '../lib/deletion'
+import { moveToTrash } from '../lib/trash'
 import { useAsyncData } from '../hooks/useAsyncData'
-import { loadCms, setVideoPoster } from '../lib/cms'
-import { deleteMedia, saveMediaMetadata } from '../lib/showcase'
-import {
-  AsyncForm,
-  CmsDialog,
-  ErrorState,
-  LoadingState,
-} from '../components/CmsDialog'
-import { Button, StatusBadge } from '../components/ui'
+import { loadCms } from '../lib/cms'
+import { renameMediaAsset } from '../lib/showcase'
+import { ErrorState, LoadingState } from '../components/CmsDialog'
+import { Button, Dropdown } from '../components/ui'
 import { EmptyState } from '../components/Feedback'
 import { MediaPreview } from '../components/MediaEditor'
+import {
+  GalleryTile,
+  GalleryViewer,
+  SelectionBar,
+  useGallerySelection,
+} from '../components/Gallery'
 import { useUploads } from '../components/UploadManager'
 import { MEDIA_ACCEPT } from '../lib/media-processing'
 import type { MediaAsset } from '../lib/database.types'
 export function MediaLibraryPage() {
-  const { data, error, loading, reload } = useAsyncData(loadCms)
+  const { data, error, loading, reload, setData } = useAsyncData(loadCms)
   const uploads = useUploads()
   const [query, setQuery] = useState('')
   const [kind, setKind] = useState('all')
-  const [selected, setSelected] = useState<MediaAsset | null>(null)
+  const [sort, setSort] = useState('newest')
+  const [density, setDensity] = useState('comfortable')
+  const [editingName, setEditingName] = useState(false)
+  const [preview, setPreview] = useState<string | null>(null)
+  const [cleanup, setCleanup] = useState(pendingCleanup)
+  const [cleaning, setCleaning] = useState(false)
+  useEffect(() => {
+    const refresh = () => setCleanup(pendingCleanup())
+    window.addEventListener(CLEANUP_EVENT, refresh)
+    return () => window.removeEventListener(CLEANUP_EVENT, refresh)
+  }, [])
   const assets = useMemo(() => {
     const merged = [...(data?.assets ?? [])]
     for (const item of uploads.items)
@@ -27,169 +42,266 @@ export function MediaLibraryPage() {
         merged.unshift(item.asset)
     return merged.filter(
       (a) =>
+        !a.deleted_at &&
         !a.storage_path.startsWith('internal/') &&
         ['image', 'video', 'model_3d'].includes(a.kind),
     )
   }, [data, uploads.items])
-  const visible = assets.filter(
-    (a) =>
-      (kind === 'all' || a.kind === kind) &&
-      `${a.title} ${a.original_filename}`
-        .toLowerCase()
-        .includes(query.toLowerCase()),
-  )
+  const visible = assets
+    .filter(
+      (a) =>
+        (kind === 'all' || a.kind === kind) &&
+        `${a.title} ${a.original_filename}`
+          .toLowerCase()
+          .includes(query.toLowerCase()),
+    )
+    .sort((a, b) =>
+      sort === 'name'
+        ? a.title.localeCompare(b.title)
+        : sort === 'size'
+          ? b.byte_size - a.byte_size
+          : (sort === 'oldest' ? 1 : -1) *
+              (Date.parse(a.created_at) - Date.parse(b.created_at)) ||
+            a.id.localeCompare(b.id),
+    )
+  const selection = useGallerySelection(visible, reload)
+  const groups = new Map<string, MediaAsset[]>()
+  for (const asset of visible) {
+    const label = ['newest', 'oldest'].includes(sort)
+      ? new Date(asset.created_at).toLocaleDateString(undefined, {
+          day: 'numeric',
+          month: 'long',
+          year: 'numeric',
+        })
+      : 'All files'
+    groups.set(label, [...(groups.get(label) ?? []), asset])
+  }
   const close = () => {
-    setSelected(null)
-    void reload()
+    setPreview(null)
+    setEditingName(false)
+  }
+  const edit = (asset: MediaAsset) => {
+    setEditingName(true)
+    setPreview(asset.id)
   }
   return (
-    <div className="page cms-page">
-      <div className="page-heading">
+    <div
+      className={`page cms-page gallery-page media-library ${selection.selecting ? 'is-selecting' : ''}`}
+      data-density={density}
+    >
+      <div className="page-heading gallery-heading">
         <div>
+          <span className="gallery-eyebrow">YOUR COLLECTION</span>
           <h1>Media Library</h1>
-          <p>
-            Your reusable files for room galleries, materials and partner logos.
-          </p>
+          <p>{assets.length} files · Ready to use across your showcase</p>
         </div>
-        <label className="button button--primary upload-label">
-          Upload files
-          <input
-            type="file"
-            multiple
-            accept={MEDIA_ACCEPT}
-            onChange={(e) => {
-              if (e.target.files)
-                uploads.enqueue(
-                  Array.from(e.target.files),
-                  'library',
-                  'library',
-                )
-              e.target.value = ''
-            }}
-          />
-        </label>
+        <div className="gallery-heading-actions">
+          <Link className="button" to="/trash">
+            <Trash2 size={18} /> Trash
+          </Link>
+          <label className="button button--primary upload-label">
+            <Upload size={18} /> Upload files
+            <input
+              type="file"
+              multiple
+              accept={MEDIA_ACCEPT}
+              onChange={(e) => {
+                if (e.target.files)
+                  uploads.enqueue(
+                    Array.from(e.target.files),
+                    'library',
+                    'library',
+                  )
+                e.target.value = ''
+              }}
+            />
+          </label>
+        </div>
       </div>
-      <div className="cms-toolbar">
+      <div className="gallery-toolbar">
         <input
           aria-label="Search media"
-          placeholder="Search media…"
+          placeholder="Search your files…"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
         />
-        <select
-          aria-label="Media type"
-          value={kind}
-          onChange={(e) => setKind(e.target.value)}
-        >
-          <option value="all">All media</option>
-          <option value="image">Images</option>
-          <option value="video">Videos</option>
-          <option value="model_3d">3D models</option>
-        </select>
+        <div className="media-toolbar-options">
+          <Dropdown
+            label="Sort media"
+            value={sort}
+            onChange={setSort}
+            options={[
+              { value: 'newest', label: 'Newest first' },
+              { value: 'oldest', label: 'Oldest first' },
+              { value: 'name', label: 'Name' },
+              { value: 'size', label: 'Largest first' },
+            ]}
+          />
+          <Dropdown
+            label="Thumbnail size"
+            value={density}
+            onChange={setDensity}
+            options={[
+              { value: 'comfortable', label: 'Comfortable' },
+              { value: 'compact', label: 'Compact' },
+            ]}
+          />
+        </div>
+        <SelectionBar selection={selection}>
+          <Button
+            disabled={selection.busy || selection.selected.size !== 1}
+            onClick={() => {
+              const asset = assets.find((a) => selection.selected.has(a.id))
+              if (asset) edit(asset)
+            }}
+          >
+            <Pencil size={18} /> Edit name
+          </Button>
+          <Button
+            disabled={selection.busy || !selection.selected.size}
+            onClick={() =>
+              void selection.run(
+                'Move to Trash',
+                (id) => moveToTrash('media_assets', id),
+                true,
+              )
+            }
+          >
+            <Trash2 size={18} /> Trash
+          </Button>
+        </SelectionBar>
       </div>
-      {loading ? (
+      <div className="gallery-tabs" aria-label="Media filters">
+        {[
+          ['all', 'All'],
+          ['image', 'Photos'],
+          ['video', 'Videos'],
+          ['model_3d', '3D'],
+        ].map(([value, label]) => (
+          <button
+            key={value}
+            aria-pressed={kind === value}
+            onClick={() => setKind(value)}
+          >
+            {label}
+          </button>
+        ))}
+      </div>
+      {cleanup.length > 0 && (
+        <div className="cleanup-notice" role="status">
+          <span>{cleanup.length} stored files need cleanup.</span>
+          <Button
+            busy={cleaning}
+            onClick={async () => {
+              setCleaning(true)
+              try {
+                await retryCleanup()
+              } finally {
+                setCleaning(false)
+              }
+            }}
+          >
+            Retry cleanup
+          </Button>
+        </div>
+      )}
+      {loading && !data ? (
         <LoadingState label="Loading media library…" />
       ) : error ? (
         <ErrorState message={error} retry={() => void reload()} />
       ) : !visible.length ? (
-        <EmptyState title="No media here yet">
-          Upload files or change your search.
+        <EmptyState
+          illustration={
+            <img
+              src="/assets/gallery-empty.svg"
+              alt=""
+              aria-hidden="true"
+              className="gallery-empty-illustration"
+            />
+          }
+          action={
+            query || kind !== 'all' ? (
+              <Button
+                onClick={() => {
+                  setQuery('')
+                  setKind('all')
+                }}
+              >
+                Clear filters
+              </Button>
+            ) : undefined
+          }
+          title={
+            query || kind !== 'all'
+              ? 'No matching files'
+              : 'Your gallery starts here'
+          }
+        >
+          {query || kind !== 'all'
+            ? 'Try a different search or show all your files.'
+            : 'Upload your first photos, videos or 3D models. Use them anywhere in your showcase.'}
         </EmptyState>
       ) : (
-        <div className="content-grid">
-          {visible.map((asset) => (
-            <article key={asset.id} className="content-card">
-              <button
-                className="content-card-main"
-                onClick={() => setSelected(asset)}
-              >
-                <div className="content-card-image">
+        [...groups].map(([label, rows]) => (
+          <section className="gallery-date-group" key={label}>
+            <h2>
+              {label}
+              <span>{rows.length}</span>
+            </h2>
+            <div className="gallery-grid">
+              {rows.map((asset) => (
+                <GalleryTile
+                  key={asset.id}
+                  id={asset.id}
+                  title={asset.title}
+                  selection={selection}
+                  open={() => {
+                    setEditingName(false)
+                    setPreview(asset.id)
+                  }}
+                  badge={
+                    asset.kind === 'video'
+                      ? 'VIDEO'
+                      : asset.kind === 'model_3d'
+                        ? '3D'
+                        : undefined
+                  }
+                  footer={<Button onClick={() => edit(asset)}>Edit</Button>}
+                >
                   <MediaPreview asset={asset} />
-                </div>
-                <h2>{asset.title}</h2>
-                <p>
-                  {asset.kind === 'model_3d' ? '3D model' : asset.kind} ·{' '}
-                  {(asset.byte_size / 1024 / 1024).toFixed(1)} MB
-                </p>
-              </button>
-              <footer>
-                <StatusBadge status={asset.status} />
-                <Button onClick={() => setSelected(asset)}>Edit</Button>
-              </footer>
-            </article>
-          ))}
-        </div>
-      )}
-      {selected && (
-        <CmsDialog title={selected.title} onClose={close}>
-          <AsyncForm
-            onClose={close}
-            danger={{
-              label: 'Delete media',
-              action: () => deleteMedia(selected),
-            }}
-            onSubmit={async (form) => {
-              await saveMediaMetadata(
-                {
-                  title: String(form.get('title') ?? '').trim(),
-                  alt_text: String(form.get('alt_text') ?? '').trim() || null,
-                  caption: selected.caption,
-                  status: selected.status,
-                  is_publicly_deliverable: selected.is_publicly_deliverable,
-                },
-                selected,
-              )
-              if (selected.kind === 'video')
-                await setVideoPoster(
-                  selected,
-                  assets.find((a) => a.id === form.get('poster')) ?? null,
-                )
-            }}
-          >
-            <div className="cms-dialog__grid">
-              <label className="field field--wide">
-                <span>Title *</span>
-                <input name="title" required defaultValue={selected.title} />
-              </label>
-              {selected.kind === 'image' && (
-                <label className="field field--wide">
-                  <span>Alternative text</span>
-                  <input
-                    name="alt_text"
-                    defaultValue={selected.alt_text ?? ''}
-                  />
-                  <small>
-                    Describe the image for visitors using screen readers.
-                  </small>
-                </label>
-              )}
-              {selected.kind === 'video' && (
-                <label className="field field--wide">
-                  <span>Video cover (optional)</span>
-                  <select
-                    name="poster"
-                    defaultValue={selected.poster_asset_id ?? ''}
-                  >
-                    <option value="">
-                      Use the browser's first-frame preview
-                    </option>
-                    {assets
-                      .filter((a) => a.kind === 'image')
-                      .map((a) => (
-                        <option key={a.id} value={a.id}>
-                          {a.title}
-                        </option>
-                      ))}
-                  </select>
-                </label>
-              )}
-              <p className="muted field--wide">
-                Visibility is managed by the content using this media. Removing
-                media that is still in use may be blocked.
-              </p>
+                </GalleryTile>
+              ))}
             </div>
-          </AsyncForm>
-        </CmsDialog>
+          </section>
+        ))
+      )}
+      {preview && (
+        <GalleryViewer
+          assets={visible}
+          initialId={preview}
+          onClose={close}
+          initialEditing={editingName}
+          onRename={async (asset, name) => {
+            const saved = await renameMediaAsset(asset, name)
+            setData((current) =>
+              current
+                ? {
+                    ...current,
+                    assets: [
+                      saved,
+                      ...current.assets.filter((row) => row.id !== saved.id),
+                    ],
+                  }
+                : current,
+            )
+            setQuery('')
+            return saved
+          }}
+          onTrash={async (asset) => {
+            await moveToTrash('media_assets', asset.id)
+            await reload()
+          }}
+        />
       )}
     </div>
   )

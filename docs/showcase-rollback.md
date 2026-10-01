@@ -4,7 +4,7 @@ The migration runner applies one migration per PostgreSQL transaction. A failing
 
 Before production execution, take and verify a project backup and record the shared Supabase migration ledger, `public.is_admin()` definition/ACL, existing Storage policies, bucket list, exposed schemas, and Auth configuration.
 
-Do not delete rows from `showcase.schema_migrations`, edit Supabase's platform migration ledger, drop the `showcase` schema, or weaken RLS as an automated rollback. Once the CMS contains production data, database rollback is either:
+Do not delete rows from `showcase.schema_migrations`, edit Supabase's platform migration ledger, drop the `showcase` schema, or weaken RLS as an automated rollback. Once the Admin site contains production data, database rollback is either:
 
 1. a reviewed forward corrective migration, preferred; or
 2. a project restore from the verified pre-deployment backup, requiring explicit approval and coordinated downtime.

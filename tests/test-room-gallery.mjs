@@ -46,6 +46,9 @@ try {
   assert.equal(await page.locator('.room-tile').count(), 8)
   const promotedRoom = await page.locator('.room-tile h2').nth(1).textContent()
   await page
+    .getByRole('button', { name: 'Arrange albums', exact: true })
+    .click()
+  await page
     .getByRole('button', { name: `Move ${promotedRoom} earlier`, exact: true })
     .click()
   await page.waitForFunction(
@@ -95,8 +98,13 @@ try {
   await page.waitForFunction(
     () =>
       document.querySelectorAll('.mixed-card').length === 2 &&
-      !document.querySelector('.upload-center'),
+      Array.from(
+        document.querySelectorAll('.upload-center .upload-state'),
+      ).filter((el) => el.textContent === '✓ Ready').length === 2,
   )
+  await page
+    .getByRole('button', { name: 'Dismiss uploads', exact: true })
+    .click()
   assert.equal(await page.locator('.notification-layer dialog').count(), 0)
   assert.equal(
     await page
@@ -130,6 +138,9 @@ try {
     1,
   )
   await page
+    .getByRole('button', { name: 'Arrange albums', exact: true })
+    .click()
+  await page
     .getByRole('button', {
       name: 'Move Second room album earlier',
       exact: true,
@@ -153,7 +164,15 @@ try {
     })
     .getByRole('button', { name: 'Edit work', exact: true })
     .click()
-  await dialog.locator('[name=status]').selectOption('published')
+  await dialog
+    .getByRole('combobox', { name: 'Visibility', exact: true })
+    .click()
+  await page
+    .getByRole('option', {
+      name: 'Published — visible on website',
+      exact: true,
+    })
+    .click()
   await dialog
     .getByRole('button', { name: 'Publish work', exact: true })
     .click()
@@ -290,13 +309,19 @@ try {
     ['partners', 'partner', 'Local studio'],
   ]) {
     await page.goto(front + '/' + route)
+    await page.setViewportSize({ width: 1440, height: 900 })
     await page
       .getByRole('button', { name: `Create ${kind}`, exact: true })
       .click()
     await dialog.locator('[name=title]').fill(name)
     if (kind === 'material') {
       assert.equal(await dialog.locator('[name=tier]').inputValue(), 'mid')
-      await dialog.locator('[name=tier]').selectOption('top')
+      await dialog
+        .getByRole('combobox', { name: 'Category', exact: true })
+        .click()
+      await page
+        .getByRole('option', { name: 'Top — Premium', exact: true })
+        .click()
     }
     await save()
     await page.getByRole('heading', { name, exact: true }).waitFor()
@@ -310,7 +335,12 @@ try {
       .getByRole('button', { name: 'Edit', exact: true })
       .first()
       .click()
-    await dialog.locator('[name=status]').selectOption('archived')
+    await dialog
+      .getByRole('combobox', { name: 'Visibility', exact: true })
+      .click()
+    await page
+      .getByRole('option', { name: 'Archived — admins only', exact: true })
+      .click()
     await save()
     assert.equal(
       (await state())[route].find((r) => r.name === name).status,
@@ -320,11 +350,16 @@ try {
       .getByRole('button', { name: 'Edit', exact: true })
       .first()
       .click()
-    await dialog.locator('[name=status]').selectOption('draft')
+    await dialog
+      .getByRole('combobox', { name: 'Visibility', exact: true })
+      .click()
+    await page
+      .getByRole('option', { name: 'Archived — admins only', exact: true })
+      .click()
     await save()
     assert.equal(
       (await state())[route].find((r) => r.name === name).status,
-      'draft',
+      'archived',
     )
   }
   // Failed upload can be retried without keeping completed upload histories.
@@ -347,7 +382,13 @@ try {
     .locator('.upload-center')
     .getByRole('button', { name: 'Retry upload', exact: true })
     .click()
-  await page.locator('.upload-center').waitFor({ state: 'hidden' })
+  await page
+    .locator('.upload-center')
+    .getByText('✓ Ready', { exact: true })
+    .waitFor()
+  await page
+    .getByRole('button', { name: 'Dismiss uploads', exact: true })
+    .click()
   await page
     .getByRole('heading', { name: 'Retry upload', exact: true })
     .waitFor()

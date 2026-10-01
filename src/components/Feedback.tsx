@@ -74,13 +74,22 @@ export function EmptyState({
   title,
   children,
   action,
+  illustration = (
+    <img
+      className="gallery-empty-illustration"
+      src="/assets/gallery-empty.svg"
+      alt=""
+    />
+  ),
 }: {
   title: string
   children: ReactNode
   action?: ReactNode
+  illustration?: ReactNode
 }) {
   return (
     <div className="empty-state">
+      {illustration}
       <h2>{title}</h2>
       <p>{children}</p>
       {action}
@@ -92,11 +101,13 @@ export function Dialog({
   children,
   onClose,
   busy = false,
+  className = '',
 }: {
   title: string
   children: ReactNode
   onClose: () => void
   busy?: boolean
+  className?: string
 }) {
   const ref = useRef<HTMLDialogElement>(null)
   const titleId = useId()
@@ -125,7 +136,7 @@ export function Dialog({
   return (
     <dialog
       ref={ref}
-      className="native-dialog"
+      className={`native-dialog ${className}`}
       aria-labelledby={titleId}
       aria-busy={busy || formBusy}
       onCancel={(e) => {

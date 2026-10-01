@@ -1,8 +1,10 @@
+> Historical implementation record. This is not the current UI specification; see the root README and current verification reports.
+
 # Site 3 hosted Supabase verification — 1 October 2026
 
 ## Outcome
 
-The authenticated CMS at `http://localhost:5173` is connected to the hosted Supabase project `xssjgzzhcudktrkruitb` (JpInteriorsApp). The original loading error was a schema-version mismatch, not a disconnected account. The approved `database/showcase-next/008_room_based_content.sql` was applied through Supabase migration history as `showcase_room_based_content`. No frontend deployment was performed.
+The authenticated Admin site at `http://localhost:5173` is connected to the hosted Supabase project `xssjgzzhcudktrkruitb` (JpInteriorsApp). The original loading error was a schema-version mismatch, not a disconnected account. The approved `database/showcase-next/008_room_based_content.sql` was applied through Supabase migration history as `showcase_room_based_content`. No frontend deployment was performed.
 
 Before the update, existing Works REST reads returned 200, while `media_items`, the new fields and the five new functions were absent. Afterward, all eight tested public REST table endpoints returned 200: works, room_categories, materials, partners, media_assets, media_items, landing_page_versions and landing_sections. A zero-row public read proves route/schema availability, not administrator access; the authenticated browser tests below establish the normal administrator workflow.
 
@@ -26,7 +28,7 @@ The owner signed in normally in the Codex browser. No password or session token 
 | Video metadata/poster | Video title changed; image poster saved through set_video_poster. |
 | Homepage | Draft workspace loaded; the three approved default sections saved without publication; database contained three draft sections. |
 | Settings | Settings and real audit activity loaded; saving the unchanged workspace name succeeded. |
-| Deletion | Work deletion succeeded through the CMS. Test media deletion removed both metadata and real Storage objects. Other labelled content was removed by exact-ID, title- and status-restricted SQL under the authenticated database role. |
+| Deletion | Work deletion succeeded through the Admin site. Test media deletion removed both metadata and real Storage objects. Other labelled content was removed by exact-ID, title- and status-restricted SQL under the authenticated database role. |
 
 Test content never became publicly committed content. Live browser publication was deliberately not used to replace the homepage or display test content.
 
@@ -63,7 +65,7 @@ Screenshot: [connected dashboard](D:/jp-aluminium/jp-adminsite/test-results/host
 
 ## Regression checks and remaining limits
 
-This verification run also passed `npm test`, `npm run test:next` and `npm run typecheck`. Earlier local browser, database, Edge-handler, build and credential-isolation checks are recorded in NEXT_PHASE_HANDOFF.md; they should not be confused with hosted tests.
+This verification run also passed `npm test`, `npm run test:next` and `npm run typecheck`. Earlier local browser, database, Edge-handler, build and credential-isolation checks are recorded in docs/history/next-phase-handoff.md; they should not be confused with hosted tests.
 
 Still not verified or connected in production:
 

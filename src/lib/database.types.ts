@@ -6,7 +6,7 @@ export type Json =
   | { [key: string]: Json | undefined }
   | Json[]
 
-export type ContentStatus = 'draft' | 'published' | 'archived'
+export type ContentStatus = 'published' | 'archived'
 export type MediaKind = 'image' | 'video' | 'model_3d' | 'cad' | 'document'
 export type MaterialRange = 'cap' | 'mid_cap' | 'low_cap'
 export type PartnerStatus = 'active' | 'pending_nda' | 'inactive'
@@ -19,6 +19,7 @@ type Table<Row, Insert = Partial<Row>, Update = Partial<Insert>> = {
 }
 
 type Timestamps = {
+  deleted_at?: string | null
   created_at: string
   updated_at: string
   created_by: string | null
@@ -287,10 +288,6 @@ export type Database = {
     }
     Views: Record<string, never>
     Functions: {
-      set_video_poster: {
-        Args: { p_video: string; p_poster: string | null }
-        Returns: undefined
-      }
       publish_homepage: { Args: { p_version_id: string }; Returns: undefined }
       save_content: {
         Args: {
