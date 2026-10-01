@@ -5,4 +5,4 @@ dist
 !.env.example
 *.local
 *.log
-
+test-results/

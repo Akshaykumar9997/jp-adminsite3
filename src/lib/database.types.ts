@@ -1,4 +1,10 @@
-export type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[]
+export type Json =
+  | string
+  | number
+  | boolean
+  | null
+  | { [key: string]: Json | undefined }
+  | Json[]
 
 export type ContentStatus = 'draft' | 'published' | 'archived'
 export type MediaKind = 'image' | 'video' | 'model_3d' | 'cad' | 'document'
@@ -20,6 +26,8 @@ type Timestamps = {
 }
 
 export type MediaAsset = Timestamps & {
+  processing_status: 'processing' | 'ready' | 'failed'
+  poster_asset_id: string | null
   id: string
   storage_path: string
   title: string
@@ -54,6 +62,8 @@ export type Project = Timestamps & {
 }
 
 export type RoomCategory = Timestamps & {
+  cover_asset_id: string | null
+  is_custom: boolean
   id: string
   slug: string
   name: string
@@ -73,6 +83,7 @@ export type ProjectRoom = Timestamps & {
 }
 
 export type Work = Timestamps & {
+  location: string | null
   id: string
   slug: string | null
   title: string
@@ -98,6 +109,7 @@ export type MaterialCollection = Timestamps & {
 }
 
 export type Material = Timestamps & {
+  tier: 'low' | 'mid' | 'top'
   id: string
   collection_id: string
   code: string
@@ -183,24 +195,74 @@ export type AuditEvent = {
   new_data: Json | null
 }
 
-type ProjectMedia = { project_id: string; media_asset_id: string; role: string; sort_order: number }
-type ProjectRoomMedia = { project_room_id: string; media_asset_id: string; role: string; sort_order: number }
-type WorkMedia = { work_id: string; media_asset_id: string; role: string; sort_order: number }
-type WorkMaterial = { work_id: string; material_id: string; notes: string | null; sort_order: number }
-export type PartnerPrivateDocument = { id: string; partner_id: string; media_asset_id: string; document_kind: string; title: string; expires_on: string | null; internal_notes: string | null; created_at: string; created_by: string | null }
-type ProjectPartner = { project_id: string; partner_id: string; assignment_role: string | null; description: string | null; sort_order: number }
-type SchemaMigration = { version: string; name: string; sha256: string; applied_at: string; applied_by: string }
+type ProjectMedia = {
+  project_id: string
+  media_asset_id: string
+  role: string
+  sort_order: number
+}
+type ProjectRoomMedia = {
+  project_room_id: string
+  media_asset_id: string
+  role: string
+  sort_order: number
+}
+type WorkMedia = {
+  work_id: string
+  media_asset_id: string
+  role: string
+  sort_order: number
+}
+type WorkMaterial = {
+  work_id: string
+  material_id: string
+  notes: string | null
+  sort_order: number
+}
+export type PartnerPrivateDocument = {
+  id: string
+  partner_id: string
+  media_asset_id: string
+  document_kind: string
+  title: string
+  expires_on: string | null
+  internal_notes: string | null
+  created_at: string
+  created_by: string | null
+}
+type ProjectPartner = {
+  project_id: string
+  partner_id: string
+  assignment_role: string | null
+  description: string | null
+  sort_order: number
+}
+type SchemaMigration = {
+  version: string
+  name: string
+  sha256: string
+  applied_at: string
+  applied_by: string
+}
 
 export type Database = {
   public: {
     Tables: Record<string, never>
     Views: Record<string, never>
-    Functions: { is_admin: { Args: Record<PropertyKey, never>; Returns: boolean } }
+    Functions: {
+      is_admin: { Args: Record<PropertyKey, never>; Returns: boolean }
+    }
     Enums: Record<string, never>
     CompositeTypes: Record<string, never>
   }
   showcase: {
     Tables: {
+      media_items: Table<{
+        owner_kind: string
+        owner_id: string
+        media_asset_id: string
+        sort_order: number
+      }>
       media_assets: Table<MediaAsset>
       projects: Table<Project>
       room_categories: Table<RoomCategory>
@@ -225,10 +287,49 @@ export type Database = {
     }
     Views: Record<string, never>
     Functions: {
+      set_video_poster: {
+        Args: { p_video: string; p_poster: string | null }
+        Returns: undefined
+      }
+      publish_homepage: { Args: { p_version_id: string }; Returns: undefined }
+      save_content: {
+        Args: {
+          p_kind: string
+          p_id: string | null
+          p_data: Json
+          p_assets: Json
+          p_cover: string | null
+        }
+        Returns: string
+      }
+      reorder_media: {
+        Args: { p_kind: string; p_owner: string; p_assets: Json }
+        Returns: undefined
+      }
+      reorder_works: {
+        Args: { p_room: string; p_ids: string[] }
+        Returns: undefined
+      }
+      reorder_rooms: { Args: { p_ids: string[] }; Returns: undefined }
       is_media_public: { Args: { p_asset_id: string }; Returns: boolean }
-      ensure_landing_draft: { Args: Record<PropertyKey, never>; Returns: string }
-      save_landing_draft: { Args: { p_version_id: string; p_meta_title: string | null; p_meta_description: string | null; p_sections: Json; p_featured: Json }; Returns: undefined }
-      publish_landing_version: { Args: { p_version_id: string }; Returns: undefined }
+      ensure_landing_draft: {
+        Args: Record<PropertyKey, never>
+        Returns: string
+      }
+      save_landing_draft: {
+        Args: {
+          p_version_id: string
+          p_meta_title: string | null
+          p_meta_description: string | null
+          p_sections: Json
+          p_featured: Json
+        }
+        Returns: undefined
+      }
+      publish_landing_version: {
+        Args: { p_version_id: string }
+        Returns: undefined
+      }
     }
     Enums: {
       content_status: ContentStatus

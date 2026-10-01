@@ -1,62 +1,271 @@
-import { X } from 'lucide-react'
-import { useState, type FormEvent, type ReactNode } from 'react'
+import { useRef, useState, type FormEvent, type ReactNode } from 'react'
 import { Button } from './ui'
-import { messageFrom } from '../lib/showcase'
+import {
+  Dialog,
+  EmptyState,
+  Loader,
+  useFeedback,
+  useOperation,
+  useUnsaved,
+} from './Feedback'
 import type { ContentStatus } from '../lib/database.types'
 
-export function CmsDialog({ title, eyebrow = 'Showcase CMS', onClose, children }: { title: string; eyebrow?: string; onClose: () => void; children: ReactNode }) {
+export function CmsDialog({
+  title,
+  onClose,
+  children,
+}: {
+  title: string
+  eyebrow?: string
+  onClose: () => void
+  children: ReactNode
+}) {
+  const { confirm, hasUnsaved } = useFeedback()
+  const close = async () => {
+    if (
+      !hasUnsaved() ||
+      (await confirm({
+        title: 'Unsaved changes',
+        message: 'You have unsaved changes. Leave without saving?',
+        confirmLabel: 'Leave',
+      }))
+    )
+      onClose()
+  }
   return (
-    <div className="dialog-backdrop" role="presentation" onMouseDown={onClose}>
-      <section className="dialog cms-dialog" role="dialog" aria-modal="true" aria-labelledby="dialog-title" onMouseDown={(event) => event.stopPropagation()}>
-        <button className="icon-button dialog__close" onClick={onClose} aria-label="Close dialog"><X size={18} /></button>
-        <span className="eyebrow">{eyebrow}</span>
-        <h2 id="dialog-title">{title}</h2>
-        {children}
-      </section>
-    </div>
+    <Dialog title={title} onClose={() => void close()}>
+      {children}
+    </Dialog>
   )
 }
-
-export function AsyncForm({ onSubmit, onClose, children, submitLabel = 'Save changes', danger }: {
-  onSubmit: (form: FormData) => Promise<void>
+export function AsyncForm({
+  onSubmit,
+  onClose,
+  children,
+  submitLabel = 'Save changes',
+  danger,
+  successMessage = 'Changes saved successfully.',
+}: {
+  onSubmit: (form: FormData) => Promise<void | boolean>
   onClose: () => void
   children: ReactNode
   submitLabel?: string
+  successMessage?: string
   danger?: { label: string; action: () => Promise<void> }
 }) {
-  const [busy, setBusy] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-  const run = async (action: () => Promise<void>) => {
-    setBusy(true); setError(null)
-    try { await action(); onClose() } catch (reason) { setError(messageFrom(reason)); setBusy(false) }
+  const operation = useOperation()
+  const { confirm, hasUnsaved } = useFeedback()
+  const [action, setAction] = useState<'save' | 'delete' | 'publish'>('save')
+  const [dirty, setDirty] = useState(false)
+  const [errors, setErrors] = useState<Record<string, string>>({})
+  const ref = useRef<HTMLFormElement>(null)
+  useUnsaved(dirty)
+  const validate = (
+    el: HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement,
+  ) => {
+    const error =
+      el.required && !el.value.trim()
+        ? `Please enter ${el.getAttribute('data-label') || el.name.replaceAll('_', ' ')}.`
+        : el.type === 'email' && el.value && !el.validity.valid
+          ? 'Please enter a valid email address.'
+          : ''
+    el.setAttribute('aria-invalid', String(!!error))
+    const parent = el.closest('label')
+    let message = parent?.querySelector('.field-error')
+    if (error && !message) {
+      message = document.createElement('small')
+      message.className = 'field-error'
+      message.id = `error-${el.name}`
+      message.setAttribute('role', 'alert')
+      parent?.append(message)
+      el.setAttribute('aria-describedby', message.id)
+    }
+    if (message) message.textContent = error
+    setErrors((current) => {
+      const next = { ...current }
+      if (error) next[el.name] = error
+      else delete next[el.name]
+      return next
+    })
+    return error
   }
   const submit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
+    if (operation.pending) return
+    const invalid: Record<string, string> = {}
+    ref.current
+      ?.querySelectorAll<
+        HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
+      >('input,select,textarea')
+      .forEach((el) => {
+        const error = validate(el)
+        if (error) invalid[el.name] = error
+      })
+    setErrors(invalid)
+    if (Object.keys(invalid).length) {
+      ref.current?.querySelector<HTMLElement>('[aria-invalid="true"]')?.focus()
+      return
+    }
     const form = new FormData(event.currentTarget)
-    void run(() => onSubmit(form))
+    setAction(form.get('status') === 'published' ? 'publish' : 'save')
+    void operation.run(
+      async () => {
+        const saved = await onSubmit(form)
+        if (saved === false) return false
+        setDirty(false)
+        onClose()
+        return true
+      },
+      { action: 'save changes', success: successMessage },
+    )
+  }
+  const cancel = async () => {
+    if (
+      !hasUnsaved() ||
+      (await confirm({
+        title: 'Unsaved changes',
+        message: 'Your changes have not been saved. Leave without saving?',
+        confirmLabel: 'Leave',
+      }))
+    ) {
+      setDirty(false)
+      onClose()
+    }
   }
   return (
-    <form className="cms-dialog__form" onSubmit={submit}>
-      {children}
-      {error && <div className="auth-error" role="alert">{error}</div>}
+    <form
+      ref={ref}
+      noValidate
+      className="cms-dialog__form"
+      onSubmit={submit}
+      onChange={() => setDirty(true)}
+      onBlur={(event) => {
+        const el = event.target
+        if (
+          el instanceof HTMLInputElement ||
+          el instanceof HTMLSelectElement ||
+          el instanceof HTMLTextAreaElement
+        )
+          validate(el)
+      }}
+      onInput={(event) => {
+        const el = event.target
+        if (
+          (el instanceof HTMLInputElement ||
+            el instanceof HTMLSelectElement ||
+            el instanceof HTMLTextAreaElement) &&
+          el.getAttribute('aria-invalid') === 'true'
+        )
+          validate(el)
+      }}
+    >
+      <fieldset disabled={operation.pending}>{children}</fieldset>
+      {!!Object.keys(errors).length && (
+        <p className="field-error" role="alert">
+          Check the highlighted fields before saving.
+        </p>
+      )}
+      {operation.error && (
+        <p className="field-error" role="alert">
+          {operation.error}
+        </p>
+      )}
       <div className="cms-dialog__actions">
-        {danger && <Button type="button" className="button--danger" disabled={busy} onClick={() => { if (window.confirm(`${danger.label}? This cannot be undone.`)) void run(danger.action) }}>{danger.label}</Button>}
+        {danger && (
+          <Button
+            className="button--danger"
+            busy={operation.pending}
+            onClick={() => {
+              setAction('delete')
+              void operation.run(
+                async () => {
+                  if (
+                    !(await confirm({
+                      title: danger.label,
+                      message:
+                        'This removes the item and its showcase associations. This action cannot be undone.',
+                      confirmLabel: 'Delete',
+                      destructive: true,
+                    }))
+                  )
+                    return false
+                  await danger.action()
+                  setDirty(false)
+                  onClose()
+                },
+                {
+                  action: 'delete this item',
+                  success: 'Item deleted successfully.',
+                },
+              )
+            }}
+          >
+            {operation.pending && action === 'delete'
+              ? 'Deleting…'
+              : danger.label}
+          </Button>
+        )}
         <span />
-        <Button type="button" disabled={busy} onClick={onClose}>Cancel</Button>
-        <Button type="submit" variant="primary" disabled={busy}>{busy ? 'Saving…' : submitLabel}</Button>
+        <Button disabled={operation.pending} onClick={() => void cancel()}>
+          Cancel
+        </Button>
+        <Button type="submit" variant="primary" busy={operation.pending}>
+          {operation.pending
+            ? action === 'delete'
+              ? 'Deleting…'
+              : action === 'publish'
+                ? 'Publishing…'
+                : 'Saving changes…'
+            : operation.state === 'error'
+              ? 'Retry save'
+              : submitLabel}
+        </Button>
       </div>
     </form>
   )
 }
-
-export function StatusField({ value = 'draft' }: { value?: ContentStatus }) {
-  return <label className="field"><span>Publication status</span><select name="status" defaultValue={value}><option value="draft">Draft</option><option value="published">Published</option><option value="archived">Archived</option></select></label>
+export function StatusField({
+  value = 'draft',
+  onChange,
+}: {
+  value?: ContentStatus
+  onChange?: (status: ContentStatus) => void
+}) {
+  return (
+    <label className="field">
+      <span>Visibility</span>
+      <select
+        name="status"
+        defaultValue={value}
+        onChange={(e) => onChange?.(e.target.value as ContentStatus)}
+      >
+        <option value="draft">Draft — only admins</option>
+        <option value="published">Published — visible on website</option>
+        <option value="archived">Archived — hidden</option>
+      </select>
+    </label>
+  )
 }
-
-export function LoadingState({ label = 'Loading showcase content…' }: { label?: string }) {
-  return <div className="empty-state" role="status"><h2>{label}</h2><p>Please wait while the secure CMS data is loaded.</p></div>
+export function LoadingState({
+  label = 'Loading showcase content…',
+}: {
+  label?: string
+}) {
+  return <Loader label={label} skeleton />
 }
-
-export function ErrorState({ message, retry }: { message: string; retry: () => void }) {
-  return <div className="empty-state" role="alert"><h2>Unable to load content</h2><p>{message}</p><Button onClick={retry}>Try again</Button></div>
+export function ErrorState({
+  message,
+  retry,
+}: {
+  message: string
+  retry: () => void
+}) {
+  return (
+    <EmptyState
+      title="Unable to load content"
+      action={<Button onClick={retry}>Retry</Button>}
+    >
+      {message}
+    </EmptyState>
+  )
 }

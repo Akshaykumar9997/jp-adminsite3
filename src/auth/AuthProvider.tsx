@@ -1,9 +1,21 @@
 import type { Session, User } from '@supabase/supabase-js'
-import { createContext, useContext, useEffect, useState, type ReactNode } from 'react'
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useRef,
+  useState,
+  type ReactNode,
+} from 'react'
 import { Navigate, Outlet, useLocation } from 'react-router-dom'
+import { Loader, useFeedback } from '../components/Feedback'
 import { supabase, supabaseConfigurationError } from '../lib/supabase'
 
-type AuthStatus = 'loading' | 'authorizing' | 'authenticated' | 'unauthenticated'
+type AuthStatus =
+  | 'loading'
+  | 'authorizing'
+  | 'authenticated'
+  | 'unauthenticated'
 
 type AuthContextValue = {
   error: string | null
@@ -18,12 +30,17 @@ const AuthContext = createContext<AuthContextValue | null>(null)
 
 function friendlyAuthError(message: string) {
   const normalized = message.toLowerCase()
-  if (normalized.includes('invalid login credentials')) return 'Incorrect email or password.'
-  if (normalized.includes('email not confirmed')) return 'This email address has not been confirmed.'
+  if (normalized.includes('invalid login credentials'))
+    return 'Incorrect email or password.'
+  if (normalized.includes('email not confirmed'))
+    return 'This email address has not been confirmed.'
   return 'Authentication failed. Please try again.'
 }
 
 export function AuthProvider({ children }: { children: ReactNode }) {
+  const { notify } = useFeedback()
+  const authLock = useRef(false)
+  const authorizedUser = useRef<string | null>(null)
   const [session, setSession] = useState<Session | null | undefined>(undefined)
   const [status, setStatus] = useState<AuthStatus>('loading')
   const [error, setError] = useState<string | null>(supabaseConfigurationError)
@@ -39,11 +56,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     void supabase.auth.getSession().then(({ data, error: sessionError }) => {
       if (!active) return
-      if (sessionError) setError('Your saved session could not be restored. Please sign in again.')
+      if (sessionError)
+        setError(
+          'Your saved session could not be restored. Please sign in again.',
+        )
       setSession(sessionError ? null : data.session)
     })
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, nextSession) => {
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, nextSession) => {
       if (active) setSession(nextSession)
     })
 
@@ -56,6 +78,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (session === undefined) return
     if (!session || !supabase) {
+      authorizedUser.current = null
       setStatus('unauthenticated')
       return
     }
@@ -63,7 +86,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const client = supabase
     let active = true
     let verifying = false
-    setStatus('authorizing')
+    if (authorizedUser.current !== session.user.id) setStatus('authorizing')
 
     const verifyAdmin = async () => {
       if (verifying) return
@@ -72,20 +95,36 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       verifying = false
       if (!active) return
       if (!authorizationError && data === true) {
+        authorizedUser.current = session.user.id
         setError(null)
         setStatus('authenticated')
         return
       }
 
-      setError(authorizationError
-        ? 'Administrator access could not be verified. Your session was cleared.'
-        : 'This account is not authorized to access the Admin CMS.')
+      if (authorizationError) {
+        setError(
+          'Administrator access could not be verified. Check your connection and try again.',
+        )
+        notify(
+          'Administrator access could not be rechecked. Your input is kept; server authorization still protects every change.',
+          'warning',
+        )
+        // A transient network failure must not destroy an already authorized editor.
+        setStatus((current) =>
+          current === 'authenticated' ? current : 'unauthenticated',
+        )
+        return
+      }
+      setError('This account is not authorized to access the Admin CMS.')
+      authorizedUser.current = null
       setSession(null)
       setStatus('unauthenticated')
       void client.auth.signOut({ scope: 'local' })
     }
 
-    const verifyWhenVisible = () => { if (document.visibilityState === 'visible') void verifyAdmin() }
+    const verifyWhenVisible = () => {
+      if (document.visibilityState === 'visible') void verifyAdmin()
+    }
     void verifyAdmin()
     const interval = window.setInterval(() => void verifyAdmin(), 60_000)
     document.addEventListener('visibilitychange', verifyWhenVisible)
@@ -98,10 +137,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [session])
 
   const signInWithPassword = async (email: string, password: string) => {
-    if (!supabase) return
+    if (!supabase || authLock.current) return
+    authLock.current = true
     setError(null)
     setStatus('loading')
-    const { data, error: signInError } = await supabase.auth.signInWithPassword({ email, password })
+    const { data, error: signInError } = await supabase.auth.signInWithPassword(
+      { email, password },
+    )
+    authLock.current = false
     if (signInError || !data.session) {
       setError(friendlyAuthError(signInError?.message ?? 'No session returned'))
       setStatus('unauthenticated')
@@ -111,7 +154,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   const signInWithGoogle = async () => {
-    if (!supabase) return
+    if (!supabase || authLock.current) return
+    authLock.current = true
     setError(null)
     setStatus('loading')
     const { error: signInError } = await supabase.auth.signInWithOAuth({
@@ -121,6 +165,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         redirectTo: `${window.location.origin}/auth/callback`,
       },
     })
+    authLock.current = false
     if (signInError) {
       setError(friendlyAuthError(signInError.message))
       setStatus('unauthenticated')
@@ -136,7 +181,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   return (
-    <AuthContext.Provider value={{ error, signInWithGoogle, signInWithPassword, signOut, status, user: session?.user ?? null }}>
+    <AuthContext.Provider
+      value={{
+        error,
+        signInWithGoogle,
+        signInWithPassword,
+        signOut,
+        status,
+        user: session?.user ?? null,
+      }}
+    >
       {children}
     </AuthContext.Provider>
   )
@@ -148,16 +202,26 @@ export function useAuth() {
   return value
 }
 
-function AuthLoading({ message = 'Checking administrator access…' }: { message?: string }) {
-  return <div className="auth-loading" role="status"><span className="auth-spinner" />{message}</div>
+function AuthLoading({
+  message = 'Checking administrator access…',
+}: {
+  message?: string
+}) {
+  return (
+    <div className="auth-loading">
+      <Loader label={message} />
+    </div>
+  )
 }
 
 export function RequireAdmin() {
   const auth = useAuth()
   const location = useLocation()
 
-  if (auth.status === 'loading' || auth.status === 'authorizing') return <AuthLoading />
-  if (auth.status !== 'authenticated') return <Navigate to="/login" replace state={{ from: location }} />
+  if (auth.status === 'loading' || auth.status === 'authorizing')
+    return <AuthLoading />
+  if (auth.status !== 'authenticated')
+    return <Navigate to="/login" replace state={{ from: location }} />
   return <Outlet />
 }
 
@@ -167,6 +231,15 @@ export function AuthCallback() {
   const oauthError = params.get('error_description') ?? params.get('error')
 
   if (auth.status === 'authenticated') return <Navigate to="/" replace />
-  if (auth.status === 'loading' || auth.status === 'authorizing') return <AuthLoading message="Completing Google sign-in…" />
-  return <Navigate to="/login" replace state={{ message: oauthError ? `Google sign-in failed: ${oauthError}` : null }} />
+  if (auth.status === 'loading' || auth.status === 'authorizing')
+    return <AuthLoading message="Completing Google sign-in…" />
+  return (
+    <Navigate
+      to="/login"
+      replace
+      state={{
+        message: oauthError ? 'Google sign-in failed. Please try again.' : null,
+      }}
+    />
+  )
 }

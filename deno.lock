@@ -27,6 +27,7 @@
         "npm:react-dom@^19.3.0",
         "npm:react-router-dom@^7.18.4",
         "npm:react@^19.3.0",
+        "npm:sonner@2.0.8",
         "npm:typescript@^7.0.2",
         "npm:vite@^8.3.1"
       ]

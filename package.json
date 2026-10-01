@@ -10,6 +10,10 @@
     "test": "node scripts/verify-showcase-package.mjs",
     "test:database": "node scripts/test-showcase-database.mjs",
     "test:edge": "npx -y deno@2.5.2 test --allow-env supabase/functions/public-showcase-media/index_test.ts",
+    "test:next": "node scripts/test-next-unit.mjs && node scripts/test-next-database.mjs",
+    "test:browser": "node scripts/test-room-gallery.mjs",
+    "test:security": "node scripts/scan-client-secrets.mjs",
+    "test:local-server": "node scripts/local-test-server.mjs",
     "storage:plan": "node scripts/manage-showcase-bucket.mjs",
     "preview": "vite preview"
   },
@@ -18,12 +22,13 @@
     "lucide-react": "^1.48.0",
     "react": "^19.3.0",
     "react-dom": "^19.3.0",
-    "react-router-dom": "^7.18.4"
+    "react-router-dom": "^7.18.4",
+    "sonner": "2.0.8"
   },
   "devDependencies": {
+    "@electric-sql/pglite": "0.3.14",
     "@types/react": "^19.3.0",
     "@types/react-dom": "^19.3.0",
-    "@electric-sql/pglite": "0.3.14",
     "@vitejs/plugin-react": "^6.1.1",
     "typescript": "^7.0.2",
     "vite": "^8.3.1"
