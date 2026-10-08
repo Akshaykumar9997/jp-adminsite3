@@ -10,6 +10,9 @@ import {
   UserRound,
   X,
   Trash2,
+  Shield,
+  ClipboardList,
+  Headphones,
 } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import { NavLink, Outlet, useLocation } from 'react-router-dom'
@@ -19,11 +22,14 @@ import { useFeedback, useOperation } from './Feedback'
 import { useUploads } from './UploadManager'
 
 const contentItems = [
+  { label: 'Leads', icon: ClipboardList, to: '/leads' },
+  { label: 'Customer Support', icon: Headphones, to: '/customer-support' },
   { label: 'Rooms', icon: Boxes, to: '/rooms' },
   { label: 'Media Library', icon: Image, to: '/media' },
   { label: 'Materials', icon: SlidersHorizontal, to: '/materials' },
   { label: 'Partners', icon: Handshake, to: '/partners' },
   { label: 'Trash', icon: Trash2, to: '/trash' },
+  { label: 'Manage Admins', icon: Shield, to: '/admins' },
 ]
 
 export function AppShell() {

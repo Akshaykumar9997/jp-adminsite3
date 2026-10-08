@@ -7,6 +7,8 @@ import { AuthCallback, RequireAdmin } from './auth/AuthProvider'
 import { LoginPage } from './pages/LoginPage'
 import { MaterialsGalleryPage } from './pages/MaterialsGalleryPage'
 import { TrashPage } from './pages/TrashPage'
+import { AdminsPage } from './pages/AdminsPage'
+import { CrmPage } from './pages/CrmPage'
 
 export default function App() {
   return (
@@ -23,6 +25,9 @@ export default function App() {
           <Route path="media" element={<MediaLibraryPage />} />
           <Route path="materials" element={<MaterialsGalleryPage />} />
           <Route path="trash" element={<TrashPage />} />
+          <Route path="admins" element={<AdminsPage />} />
+          <Route path="leads" element={<CrmPage key="leads" kind="leads" />} />
+          <Route path="customer-support" element={<CrmPage key="support" kind="customer_support" />} />
           <Route
             path="partners"
             element={<MaterialsGalleryPage key="partner" kind="partner" />}

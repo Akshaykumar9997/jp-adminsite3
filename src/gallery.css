@@ -508,6 +508,9 @@
   .gallery-page {
     padding-bottom: 160px;
   }
+  .crm-page {
+    padding-bottom: 160px;
+  }
   .gallery-heading {
     min-height: 180px;
     display: block;
@@ -541,7 +544,8 @@
     left: 0;
     right: 0;
     display: flex;
-    justify-content: space-around;
+    justify-content: flex-start;
+    overflow-x: auto;
     background: #ffffffed;
     backdrop-filter: blur(18px);
     border-top: 1px solid #e9e9ef;
@@ -549,6 +553,7 @@
   }
   .gallery-mobile-nav a {
     flex: 1;
+    min-width: 76px;
     display: flex;
     align-items: center;
     flex-direction: column;

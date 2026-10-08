@@ -57,6 +57,8 @@ export function DashboardPage() {
               <h2>Manage your showcase</h2>
               <div className="dashboard-shortcuts">
                 {[
+                  ['/leads', 'Leads'],
+                  ['/customer-support', 'Customer Support'],
                   ['/rooms', 'Rooms'],
                   ['/materials', 'Materials'],
                   ['/partners', 'Partners'],

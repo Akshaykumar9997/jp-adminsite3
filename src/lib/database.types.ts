@@ -246,7 +246,23 @@ type SchemaMigration = {
   applied_by: string
 }
 
+export type CrmRow = {
+  id: string | number
+  created_at: string
+  [key: string]: string | number | boolean | null
+}
+
 export type Database = {
+  crm: {
+    Tables: {
+      leads: Table<CrmRow, never, never>
+      customer_support: Table<CrmRow, never, never>
+    }
+    Views: Record<string, never>
+    Functions: Record<string, never>
+    Enums: Record<string, never>
+    CompositeTypes: Record<string, never>
+  }
   public: {
     Tables: Record<string, never>
     Views: Record<string, never>

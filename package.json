@@ -8,6 +8,8 @@
     "build": "tsc -b && vite build",
     "typecheck": "tsc -b --pretty false",
     "test": "node scripts/verify-showcase-package.mjs",
+    "test:admins": "node tests/test-admins.mjs",
+    "test:admins:browser": "node tests/test-admins-browser.mjs",
     "test:database": "node tests/test-showcase-database.mjs",
     "test:edge": "npx -y deno@2.5.2 test --allow-env supabase/functions/public-showcase-media/index_test.ts",
     "test:next": "node tests/test-next-unit.mjs && node tests/test-next-database.mjs",
@@ -20,10 +22,12 @@
     "test:cache": "node tests/test-cache-unit.mjs && node tests/test-room-cache.mjs",
     "test:local-server": "node scripts/local-test-server.mjs",
     "storage:plan": "node scripts/manage-showcase-bucket.mjs",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "test:crm": "node tests/test-crm.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "2.117.2",
+    "exceljs": "4.4.0",
     "lucide-react": "^1.48.0",
     "react": "^19.3.0",
     "react-dom": "^19.3.0",
@@ -37,5 +41,10 @@
     "@vitejs/plugin-react": "^6.1.1",
     "typescript": "^7.0.2",
     "vite": "^8.3.1"
+  },
+  "overrides": {
+    "exceljs": {
+      "uuid": "11.1.1"
+    }
   }
 }
