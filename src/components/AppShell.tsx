@@ -23,6 +23,7 @@ import { useUploads } from './UploadManager'
 
 const contentItems = [
   { label: 'Leads', icon: ClipboardList, to: '/leads' },
+  { label: 'Visitor Logs', icon: ClipboardList, to: '/visitor-logs' },
   { label: 'Customer Support', icon: Headphones, to: '/customer-support' },
   { label: 'Rooms', icon: Boxes, to: '/rooms' },
   { label: 'Media Library', icon: Image, to: '/media' },

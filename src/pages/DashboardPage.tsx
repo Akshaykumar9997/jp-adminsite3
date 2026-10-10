@@ -58,6 +58,7 @@ export function DashboardPage() {
               <div className="dashboard-shortcuts">
                 {[
                   ['/leads', 'Leads'],
+                  ['/visitor-logs', 'Visitor Logs'],
                   ['/customer-support', 'Customer Support'],
                   ['/rooms', 'Rooms'],
                   ['/materials', 'Materials'],

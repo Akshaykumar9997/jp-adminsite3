@@ -508,7 +508,8 @@
   .gallery-page {
     padding-bottom: 160px;
   }
-  .crm-page {
+  .crm-page,
+  .visitor-logs:has(.empty-state) {
     padding-bottom: 160px;
   }
   .gallery-heading {
@@ -768,15 +769,21 @@
   height: auto;
   margin: 0 auto 18px;
 }
-.gallery-page .empty-state {
+.gallery-page .empty-state,
+.crm-page .empty-state,
+.visitor-logs .empty-state {
   padding: 36px 20px;
   border: 0;
   background: transparent;
 }
-.gallery-page .empty-state h2 {
+.gallery-page .empty-state h2,
+.crm-page .empty-state h2,
+.visitor-logs .empty-state h2 {
   font-size: 21px;
 }
-.gallery-page .empty-state p {
+.gallery-page .empty-state p,
+.crm-page .empty-state p,
+.visitor-logs .empty-state p {
   max-width: 380px;
   margin: 12px auto;
   line-height: 1.6;
@@ -885,7 +892,9 @@
   .gallery-viewer .gallery-viewer-actions .button {
     min-width: 58px;
   }
-  .gallery-page .empty-state {
+  .gallery-page .empty-state,
+  .crm-page .empty-state,
+  .visitor-logs .empty-state {
     padding: 16px 12px;
   }
   .gallery-empty-illustration {

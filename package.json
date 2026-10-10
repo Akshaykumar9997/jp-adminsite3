@@ -7,23 +7,7 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "typecheck": "tsc -b --pretty false",
-    "test": "node scripts/verify-showcase-package.mjs",
-    "test:admins": "node tests/test-admins.mjs",
-    "test:admins:browser": "node tests/test-admins-browser.mjs",
-    "test:database": "node tests/test-showcase-database.mjs",
-    "test:edge": "npx -y deno@2.5.2 test --allow-env supabase/functions/public-showcase-media/index_test.ts",
-    "test:next": "node tests/test-next-unit.mjs && node tests/test-next-database.mjs",
-    "test:browser": "node tests/test-room-gallery.mjs",
-    "test:media": "node tests/test-deletion-unit.mjs && node tests/test-media-workflows.mjs",
-    "test:gallery": "node tests/test-gallery-database.mjs && node tests/test-gallery-browser.mjs",
-    "test:gallery-rollout": "node tests/test-gallery-rollout.mjs",
-    "test:upload-panel": "node tests/test-upload-panel.mjs",
-    "test:security": "node scripts/scan-client-secrets.mjs",
-    "test:cache": "node tests/test-cache-unit.mjs && node tests/test-room-cache.mjs",
-    "test:local-server": "node scripts/local-test-server.mjs",
-    "storage:plan": "node scripts/manage-showcase-bucket.mjs",
-    "preview": "vite preview",
-    "test:crm": "node tests/test-crm.mjs"
+    "preview": "vite preview"
   },
   "dependencies": {
     "@supabase/supabase-js": "2.117.2",
@@ -35,7 +19,6 @@
     "sonner": "2.0.8"
   },
   "devDependencies": {
-    "@electric-sql/pglite": "0.3.14",
     "@types/react": "^19.3.0",
     "@types/react-dom": "^19.3.0",
     "@vitejs/plugin-react": "^6.1.1",

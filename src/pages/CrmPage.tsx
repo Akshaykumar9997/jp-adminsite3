@@ -1,45 +1,28 @@
-import { useEffect, useRef, useState } from 'react'
+import { useRef, useState } from 'react'
 import { Download, RefreshCw } from 'lucide-react'
 import { Button } from '../components/ui'
 import { ErrorState, LoadingState } from '../components/CmsDialog'
 import { loadCrm, type CrmKind } from '../lib/crm'
 import type { CrmRow } from '../lib/database.types'
 import { buildCrmWorkbook, cellText, filterCrm, leadColumns, leadStatuses, statusOf, supportColumns } from '../lib/crm-export.mjs'
+import { useAsyncData } from '../hooks/useAsyncData'
+import { EmptyState } from '../components/Feedback'
+
+const loaders = { leads: () => loadCrm('leads'), customer_support: () => loadCrm('customer_support') }
 
 export function CrmPage({ kind }: { kind: CrmKind }) {
   const title = kind === 'leads' ? 'Leads' : 'Customer Support'
   const columns = kind === 'leads' ? leadColumns : supportColumns
-  const [rows, setRows] = useState<CrmRow[]>([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState('')
+  const { data, loading, error, reload } = useAsyncData(loaders[kind], [kind])
+  const rows = data ?? []
   const [exportError, setExportError] = useState('')
   const [exporting, setExporting] = useState(false)
   const exportLock = useRef(false)
-  const generation = useRef(0)
   const [from, setFrom] = useState('')
   const [to, setTo] = useState('')
   const [status, setStatus] = useState('')
   const [page, setPage] = useState(0)
-  const refresh = async () => {
-    const id = ++generation.current
-    setLoading(true)
-    setError('')
-    setRows([])
-    try {
-      const data = await loadCrm(kind)
-      if (id === generation.current) { setRows(data); setPage(0) }
-    } catch (reason) {
-      if (id === generation.current) setError(reason instanceof Error ? reason.message : 'Could not load records.')
-    } finally {
-      if (id === generation.current) setLoading(false)
-    }
-  }
-  useEffect(() => {
-    void refresh()
-    const focus = () => void refresh()
-    window.addEventListener('focus', focus)
-    return () => { generation.current++; window.removeEventListener('focus', focus) }
-  }, [kind])
+  const refresh = async () => { setPage(0); await reload() }
   let filtered: CrmRow[] = [], filterError = ''
   try { filtered = filterCrm(rows, { from, to, status }) }
   catch (reason) { filterError = (reason as Error).message }
@@ -63,6 +46,7 @@ export function CrmPage({ kind }: { kind: CrmKind }) {
   }
   const maxPage = Math.max(0, Math.ceil(filtered.length / 50) - 1)
   const currentPage = Math.min(page, maxPage)
+  const hasFilters = Boolean(from || to || status)
   return (
     <div className="page cms-page crm-page">
       <div className="page-heading gallery-heading">
@@ -88,7 +72,13 @@ export function CrmPage({ kind }: { kind: CrmKind }) {
             </table>
           </div>
           <div className="crm-pagination"><Button disabled={!currentPage} onClick={() => setPage(currentPage - 1)}>Previous</Button><span>Page {currentPage + 1} of {maxPage + 1}</span><Button disabled={currentPage === maxPage} onClick={() => setPage(currentPage + 1)}>Next</Button></div>
-        </> : <p role="status">No records match these filters.</p>}
+        </> : <EmptyState
+          title={hasFilters ? 'No matching records' : kind === 'leads' ? 'No leads yet' : 'No support requests yet'}
+          illustration={<img className="gallery-empty-illustration" src="/assets/crm-empty.svg" alt="" />}
+          action={hasFilters ? <Button onClick={() => { setFrom(''); setTo(''); setStatus(''); setPage(0) }}>Clear filters</Button> : undefined}
+        >
+          {hasFilters ? 'Try a different date range or status, or clear your filters to see all records.' : kind === 'leads' ? 'New enquiries from the website and app will appear here, ready to review and export.' : 'Customer support requests will appear here when a client sends a request through the website.'}
+        </EmptyState>}
     </div>
   )
 }

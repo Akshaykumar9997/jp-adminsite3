@@ -1,0 +1,18 @@
+.visitor-log-list { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr)); gap: 16px; }
+.visitor-log { min-width: 0; padding: 20px; border: 1px solid #e5e7eb; border-radius: 14px; background: white; }
+.visitor-log-header { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; }
+.visitor-log-header strong { font-size: 18px; overflow-wrap: anywhere; }
+.visitor-attempt { padding: 6px 10px; border-radius: 20px; font-size: 12px; font-weight: 600; background: #f0f3f6; color: #374151; }
+.visitor-attempt-repeat { background: #fff0db; color: #854900; }
+.visitor-log dl { display: grid; gap: 14px; }
+.visitor-log dt { color: #626973; font-size: 12px; margin-bottom: 4px; }
+.visitor-log dd { margin: 0; overflow-wrap: anywhere; font-size: 14px; }
+.visitor-logs .crm-filters input { max-width: 100%; min-height: 44px; }
+.visitor-logs .crm-pagination { flex-wrap: wrap; }
+@media (min-width: 821px) {
+  .visitor-log-list { grid-template-columns: repeat(auto-fill, minmax(min(100%, 320px), 1fr)); }
+}
+@media (max-width: 600px) {
+  .visitor-logs .crm-filters label { width: 100%; }
+  .visitor-log { padding: 16px; }
+}

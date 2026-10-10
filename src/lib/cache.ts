@@ -21,8 +21,8 @@ export class MemoryCache<T> {
     this.entries.set(key, entry)
     return entry.value
   }
-  async get(key: string, load: () => Promise<T>) {
-    const cached = this.peek(key)
+  async get(key: string, load: () => Promise<T>, refresh = false) {
+    const cached = refresh ? undefined : this.peek(key)
     if (cached !== undefined) return cached
     const existing = this.pending.get(key)
     if (existing) return existing

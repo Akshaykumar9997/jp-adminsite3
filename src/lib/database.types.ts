@@ -246,6 +246,15 @@ type SchemaMigration = {
   applied_by: string
 }
 
+export type VisitorActivity = {
+  id: string
+  created_at: string
+  phone: string
+  name: string
+  district: string
+  attempt: number
+}
+
 export type CrmRow = {
   id: string | number
   created_at: string
@@ -257,6 +266,7 @@ export type Database = {
     Tables: {
       leads: Table<CrmRow, never, never>
       customer_support: Table<CrmRow, never, never>
+      visitor_activity: Table<VisitorActivity, never, never>
     }
     Views: Record<string, never>
     Functions: Record<string, never>

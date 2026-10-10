@@ -9,6 +9,9 @@ import {
   type DeletedRecord,
 } from '../lib/deletion'
 
+// Set to true to enable 10-second polling and refresh on focus/reconnect.
+const AUTO_REFRESH_ENABLED = false
+
 const keys = new WeakMap<Function, string>()
 let sequence = 0
 function cacheKey(load: Function) {
@@ -16,8 +19,8 @@ function cacheKey(load: Function) {
   return keys.get(load)!
 }
 
-export function useAsyncData<T>(load: () => Promise<T>, deps: unknown[] = []) {
-  const key = cacheKey(load)
+export function useAsyncData<T>(load: () => Promise<T>, deps: unknown[] = [], identity?: string) {
+  const key = identity ?? cacheKey(load)
   const [data, setData] = useState<T | null>(
     () => (dataCache.peek(key) as T) ?? null,
   )
@@ -31,13 +34,13 @@ export function useAsyncData<T>(load: () => Promise<T>, deps: unknown[] = []) {
   const lastData = useRef(data)
   lastData.current = data
 
-  const reload = useCallback(async (force = true) => {
-    if (force) dataCache.clear()
+  const reload = useCallback(async (force = true, background = false) => {
+    if (force && !background) dataCache.clear()
     const id = ++request.current
     setLoading(lastData.current === null)
     setError(null)
     try {
-      const next = (await dataCache.get(key, load)) as T
+      const next = (await dataCache.get(key, load, force)) as T
       warned.current = false
       if (id === request.current) setData(next)
     } catch (reason) {
@@ -55,11 +58,15 @@ export function useAsyncData<T>(load: () => Promise<T>, deps: unknown[] = []) {
     } finally {
       if (id === request.current) setLoading(false)
     }
-    // Callers pass stable module-level loaders; deps intentionally control refresh identity.
+    // Parameterized loaders supply dependencies and a stable cache identity.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, deps)
+  }, [key, ...deps])
 
   useEffect(() => {
+    const cached = dataCache.peek(key) as T | undefined
+    lastData.current = cached ?? null
+    setData(cached ?? null)
+    setLoading(cached === undefined)
     void reload(false)
     const refresh = (event: Event) => {
       const { id } = (event as CustomEvent<DeletedRecord>).detail
@@ -79,18 +86,26 @@ export function useAsyncData<T>(load: () => Promise<T>, deps: unknown[] = []) {
       setError(null)
     }
     const refreshVisible = () => {
-      if (document.visibilityState === 'visible') void reload()
+      if (document.visibilityState === 'visible' && navigator.onLine) void reload(true, true)
     }
-    const timer = window.setInterval(refreshVisible, 60_000)
-    window.addEventListener('focus', refreshVisible)
+    const timer = AUTO_REFRESH_ENABLED
+      ? window.setInterval(refreshVisible, 10_000)
+      : undefined
+    if (AUTO_REFRESH_ENABLED) {
+      window.addEventListener('focus', refreshVisible)
+      window.addEventListener('online', refreshVisible)
+      document.addEventListener('visibilitychange', refreshVisible)
+    }
     window.addEventListener(CACHE_RESET, reset)
     window.addEventListener(CHANGED_EVENT, changed)
     return () => {
       window.removeEventListener(DELETED_EVENT, refresh)
       window.removeEventListener(CHANGED_EVENT, changed)
       window.removeEventListener('focus', refreshVisible)
+      window.removeEventListener('online', refreshVisible)
+      document.removeEventListener('visibilitychange', refreshVisible)
       window.removeEventListener(CACHE_RESET, reset)
-      window.clearInterval(timer)
+      if (timer !== undefined) window.clearInterval(timer)
       request.current++
     }
   }, [reload])

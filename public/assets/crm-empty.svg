@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="240" height="184" viewBox="0 0 240 184" fill="none">
+  <ellipse cx="120" cy="164" rx="77" ry="9" fill="#E9E9F0"/>
+  <circle cx="120" cy="86" r="74" fill="#F2F1F6"/>
+  <rect x="52" y="43" width="104" height="112" rx="14" transform="rotate(-10 52 43)" fill="#E4E3ED"/>
+  <rect x="84" y="28" width="104" height="120" rx="14" transform="rotate(8 84 28)" fill="white" stroke="#DAD9E4" stroke-width="2"/>
+  <rect x="64" y="40" width="112" height="112" rx="14" fill="white" stroke="#DAD9E4" stroke-width="2"/>
+  <rect x="76" y="52" width="88" height="45" rx="8" fill="#FFF0F2"/>
+  <circle cx="97" cy="67" r="7" fill="#EAB2BE"/>
+  <path d="M85 86a12 12 0 0 1 24 0" fill="#C8BDCC"/>
+  <path d="M119 67h31M119 79h23M80 112h64M80 124h48" stroke="#DAD9E4" stroke-width="5" stroke-linecap="round"/>
+  <path d="M48 138h144l-10 20H58l-10-20Z" fill="#E4E3ED"/>
+  <path d="M48 138h43l8 9h42l8-9h43" stroke="#C8BDCC" stroke-width="2" stroke-linejoin="round"/>
+  <circle cx="180" cy="134" r="24" fill="#C4001A"/>
+  <path d="M175 126h13M175 134h13M175 142h9" stroke="white" stroke-width="2.5" stroke-linecap="round"/>
+  <circle cx="169" cy="126" r="1.5" fill="white"/>
+  <circle cx="169" cy="134" r="1.5" fill="white"/>
+  <circle cx="169" cy="142" r="1.5" fill="white"/>
+  <path d="M42 78h8m-4-4v8M194 38h8m-4-4v8" stroke="#C8BDCC" stroke-width="2" stroke-linecap="round"/>
+</svg>
