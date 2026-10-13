@@ -65,11 +65,37 @@ export function CrmPage({ kind }: { kind: CrmKind }) {
       {(filterError || exportError) && <p role="alert">{filterError || exportError}</p>}
       {loading ? <LoadingState label={`Loading ${title.toLowerCase()}…`} /> : error ? <ErrorState message={error} retry={() => void refresh()} /> :
         filtered.length ? <>
-          <p>Scroll the table horizontally to see all details.</p>
+          <p className="crm-table-hint">Scroll the table horizontally to see all details.</p>
           <div className="crm-table" tabIndex={0} role="region" aria-label={`${title} records`}>
             <table><thead><tr>{columns.map(([key, label]) => <th key={key} scope="col">{label}{key === 'created_at' ? ' (local)' : ''}</th>)}</tr></thead>
               <tbody>{filtered.slice(currentPage * 50, currentPage * 50 + 50).map(row => <tr key={row.id}>{columns.map(([key]) => <td key={key}>{cellText(row, key) || '—'}</td>)}</tr>)}</tbody>
             </table>
+          </div>
+          <div className="crm-records" aria-label={`${title} record cards`}>
+            {filtered.slice(currentPage * 50, currentPage * 50 + 50).map(row => (
+              <article className="crm-record" key={row.id}>
+                <div className="crm-record-heading">
+                  <h2>{cellText(row, 'name') || 'Unnamed customer'}</h2>
+                  {kind === 'leads' && <span className="crm-record-status">{statusOf(row) || 'No status'}</span>}
+                </div>
+                <dl className="crm-record-summary">
+                  {(kind === 'leads' ? ['contact', 'created_at', 'comment'] : ['phone', 'created_at', 'reason', 'message']).map(key => (
+                    <div key={key}>
+                      <dt>{columns.find(([column]) => column === key)?.[1]}{key === 'created_at' ? ' (local)' : ''}</dt>
+                      <dd>{cellText(row, key) || '—'}</dd>
+                    </div>
+                  ))}
+                </dl>
+                <details>
+                  <summary>All record details</summary>
+                  <dl className="crm-record-details">
+                    {columns.map(([key, label]) => (
+                      <div key={key}><dt>{label}{key === 'created_at' ? ' (local)' : ''}</dt><dd>{cellText(row, key) || '—'}</dd></div>
+                    ))}
+                  </dl>
+                </details>
+              </article>
+            ))}
           </div>
           <div className="crm-pagination"><Button disabled={!currentPage} onClick={() => setPage(currentPage - 1)}>Previous</Button><span>Page {currentPage + 1} of {maxPage + 1}</span><Button disabled={currentPage === maxPage} onClick={() => setPage(currentPage + 1)}>Next</Button></div>
         </> : <EmptyState

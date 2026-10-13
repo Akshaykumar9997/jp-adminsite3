@@ -1,0 +1,99 @@
+[
+  {
+    "contentWidth": 305,
+    "heading": "Showcase content,managed with precision.",
+    "overflow": [
+      {
+        "class": "login-panel",
+        "tag": "SECTION",
+        "text": "Secure workspaceAdministrator sign inUse",
+        "width": 320
+      }
+    ],
+    "pageWidth": 320,
+    "viewport": [
+      320,
+      568
+    ]
+  },
+  {
+    "contentWidth": 360,
+    "heading": "Showcase content,managed with precision.",
+    "overflow": [],
+    "pageWidth": 360,
+    "viewport": [
+      360,
+      800
+    ]
+  },
+  {
+    "contentWidth": 390,
+    "heading": "Showcase content,managed with precision.",
+    "overflow": [],
+    "pageWidth": 390,
+    "viewport": [
+      390,
+      844
+    ]
+  },
+  {
+    "contentWidth": 430,
+    "heading": "Showcase content,managed with precision.",
+    "overflow": [],
+    "pageWidth": 430,
+    "viewport": [
+      430,
+      932
+    ]
+  },
+  {
+    "contentWidth": 768,
+    "heading": "Showcase content,managed with precision.",
+    "overflow": [],
+    "pageWidth": 768,
+    "viewport": [
+      768,
+      1024
+    ]
+  },
+  {
+    "contentWidth": 805,
+    "heading": "Showcase content,managed with precision.",
+    "overflow": [],
+    "pageWidth": 805,
+    "viewport": [
+      820,
+      600
+    ]
+  },
+  {
+    "contentWidth": 829,
+    "heading": "Showcase content,managed with precision.",
+    "overflow": [],
+    "pageWidth": 829,
+    "viewport": [
+      844,
+      390
+    ]
+  },
+  {
+    "contentWidth": 1024,
+    "heading": "Showcase content,managed with precision.",
+    "overflow": [],
+    "pageWidth": 1024,
+    "viewport": [
+      1024,
+      768
+    ]
+  },
+  {
+    "contentWidth": 1440,
+    "heading": "Showcase content,managed with precision.",
+    "overflow": [],
+    "pageWidth": 1440,
+    "viewport": [
+      1440,
+      900
+    ]
+  }
+]

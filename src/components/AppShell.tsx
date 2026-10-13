@@ -33,6 +33,11 @@ const contentItems = [
   { label: 'Manage Admins', icon: Shield, to: '/admins' },
 ]
 
+const mobileItems = [
+  { label: 'Home', icon: LayoutDashboard, to: '/' },
+  ...contentItems.filter((item) => ['/leads', '/rooms', '/media'].includes(item.to)),
+]
+
 export function AppShell() {
   const [menuOpen, setMenuOpen] = useState(false)
   const [mobile, setMobile] = useState(
@@ -120,6 +125,10 @@ export function AppShell() {
   return (
     <div className="app-shell">
       <aside
+        id="admin-navigation"
+        role={mobile && menuOpen ? 'dialog' : undefined}
+        aria-modal={mobile && menuOpen ? true : undefined}
+        aria-label="Workspace navigation"
         ref={sidebarRef}
         inert={mobile && !menuOpen}
         className={`sidebar ${menuOpen ? 'sidebar--open' : ''}`}
@@ -136,6 +145,9 @@ export function AppShell() {
             <strong>JP ALUMINIUM</strong>
             <span>INTERIOR WORKS</span>
           </div>
+          <button className="sidebar-close" aria-label="Close navigation" onClick={() => setMenuOpen(false)}>
+            <X size={20} />
+          </button>
         </div>
         <nav aria-label="Admin navigation">
           <NavLink to="/" end onClick={() => setMenuOpen(false)}>
@@ -181,6 +193,7 @@ export function AppShell() {
             ref={toggleRef}
             aria-label="Toggle navigation"
             aria-expanded={menuOpen}
+            aria-controls="admin-navigation"
             onClick={() => setMenuOpen((open) => !open)}
           >
             {menuOpen ? <X /> : <Menu />}
@@ -210,12 +223,22 @@ export function AppShell() {
           <Outlet />
         </main>
         <nav className="gallery-mobile-nav" aria-label="Gallery navigation">
-          {contentItems.map(({ label, icon: Icon, to }) => (
-            <NavLink key={to} to={to}>
+          {mobileItems.map(({ label, icon: Icon, to }) => (
+            <NavLink key={to} to={to} end={to === '/'}>
               <Icon size={21} />
               <span>{label === 'Media Library' ? 'Gallery' : label}</span>
             </NavLink>
           ))}
+          <button
+            className={!mobileItems.some((item) => item.to === pathname || item.to !== '/' && pathname.startsWith(`${item.to}/`)) ? 'active' : ''}
+            aria-label="More navigation"
+            aria-expanded={menuOpen}
+            aria-controls="admin-navigation"
+            onClick={() => setMenuOpen(true)}
+          >
+            <Menu size={21} />
+            <span>More</span>
+          </button>
         </nav>
       </div>
     </div>

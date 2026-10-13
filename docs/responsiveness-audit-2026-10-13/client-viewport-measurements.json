@@ -1,0 +1,1347 @@
+{
+  "pages": [
+    {
+      "name": "Welcome entry",
+      "checks": [
+        {
+          "contentWidth": 305,
+          "heading": "Your space.Our next inspiration.",
+          "overflow": [],
+          "pageWidth": 305,
+          "viewport": [
+            320,
+            568
+          ]
+        },
+        {
+          "contentWidth": 345,
+          "heading": "Your space.Our next inspiration.",
+          "overflow": [],
+          "pageWidth": 345,
+          "viewport": [
+            360,
+            800
+          ]
+        },
+        {
+          "contentWidth": 375,
+          "heading": "Your space.Our next inspiration.",
+          "overflow": [],
+          "pageWidth": 375,
+          "viewport": [
+            390,
+            844
+          ]
+        },
+        {
+          "contentWidth": 415,
+          "heading": "Your space.Our next inspiration.",
+          "overflow": [],
+          "pageWidth": 415,
+          "viewport": [
+            430,
+            932
+          ]
+        },
+        {
+          "contentWidth": 585,
+          "heading": "Your space.Our next inspiration.",
+          "overflow": [],
+          "pageWidth": 585,
+          "viewport": [
+            600,
+            800
+          ]
+        },
+        {
+          "contentWidth": 586,
+          "heading": "Your space.Our next inspiration.",
+          "overflow": [],
+          "pageWidth": 586,
+          "viewport": [
+            601,
+            800
+          ]
+        },
+        {
+          "contentWidth": 768,
+          "heading": "Your space.Our next inspiration.",
+          "overflow": [],
+          "pageWidth": 768,
+          "viewport": [
+            768,
+            1024
+          ]
+        },
+        {
+          "contentWidth": 805,
+          "heading": "Your space.Our next inspiration.",
+          "overflow": [],
+          "pageWidth": 805,
+          "viewport": [
+            820,
+            600
+          ]
+        },
+        {
+          "contentWidth": 829,
+          "heading": "Your space.Our next inspiration.",
+          "overflow": [],
+          "pageWidth": 829,
+          "viewport": [
+            844,
+            390
+          ]
+        },
+        {
+          "contentWidth": 1009,
+          "heading": "Your space.Our next inspiration.",
+          "overflow": [],
+          "pageWidth": 1009,
+          "viewport": [
+            1024,
+            768
+          ]
+        },
+        {
+          "contentWidth": 1440,
+          "heading": "Your space.Our next inspiration.",
+          "overflow": [],
+          "pageWidth": 1440,
+          "viewport": [
+            1440,
+            900
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Home",
+      "checks": [
+        {
+          "contentWidth": 305,
+          "heading": "Beautiful spaces.Built around you.",
+          "overflow": [],
+          "pageWidth": 305,
+          "viewport": [
+            320,
+            568
+          ]
+        },
+        {
+          "contentWidth": 345,
+          "heading": "Beautiful spaces.Built around you.",
+          "overflow": [],
+          "pageWidth": 345,
+          "viewport": [
+            360,
+            800
+          ]
+        },
+        {
+          "contentWidth": 375,
+          "heading": "Beautiful spaces.Built around you.",
+          "overflow": [],
+          "pageWidth": 375,
+          "viewport": [
+            390,
+            844
+          ]
+        },
+        {
+          "contentWidth": 415,
+          "heading": "Beautiful spaces.Built around you.",
+          "overflow": [],
+          "pageWidth": 415,
+          "viewport": [
+            430,
+            932
+          ]
+        },
+        {
+          "contentWidth": 585,
+          "heading": "Beautiful spaces.Built around you.",
+          "overflow": [],
+          "pageWidth": 585,
+          "viewport": [
+            600,
+            800
+          ]
+        },
+        {
+          "contentWidth": 586,
+          "heading": "Beautiful spaces.Built around you.",
+          "overflow": [],
+          "pageWidth": 586,
+          "viewport": [
+            601,
+            800
+          ]
+        },
+        {
+          "contentWidth": 753,
+          "heading": "Beautiful spaces.Built around you.",
+          "overflow": [],
+          "pageWidth": 753,
+          "viewport": [
+            768,
+            1024
+          ]
+        },
+        {
+          "contentWidth": 805,
+          "heading": "Beautiful spaces.Built around you.",
+          "overflow": [],
+          "pageWidth": 805,
+          "viewport": [
+            820,
+            600
+          ]
+        },
+        {
+          "contentWidth": 829,
+          "heading": "Beautiful spaces.Built around you.",
+          "overflow": [],
+          "pageWidth": 829,
+          "viewport": [
+            844,
+            390
+          ]
+        },
+        {
+          "contentWidth": 1009,
+          "heading": "Beautiful spaces.Built around you.",
+          "overflow": [],
+          "pageWidth": 1009,
+          "viewport": [
+            1024,
+            768
+          ]
+        },
+        {
+          "contentWidth": 1425,
+          "heading": "Beautiful spaces.Built around you.",
+          "overflow": [],
+          "pageWidth": 1425,
+          "viewport": [
+            1440,
+            900
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Works",
+      "checks": [
+        {
+          "contentWidth": 305,
+          "heading": "A little inspiration.A lot of possibility.",
+          "overflow": [
+            {
+              "class": "chip ",
+              "tag": "BUTTON",
+              "text": "Kitchen",
+              "width": 79
+            },
+            {
+              "class": "chip ",
+              "tag": "BUTTON",
+              "text": "Pooja Room",
+              "width": 105
+            },
+            {
+              "class": "chip ",
+              "tag": "BUTTON",
+              "text": "3D assets",
+              "width": 93
+            }
+          ],
+          "pageWidth": 305,
+          "viewport": [
+            320,
+            568
+          ]
+        },
+        {
+          "contentWidth": 345,
+          "heading": "A little inspiration.A lot of possibility.",
+          "overflow": [
+            {
+              "class": "chip ",
+              "tag": "BUTTON",
+              "text": "Kitchen",
+              "width": 79
+            },
+            {
+              "class": "chip ",
+              "tag": "BUTTON",
+              "text": "Pooja Room",
+              "width": 105
+            },
+            {
+              "class": "chip ",
+              "tag": "BUTTON",
+              "text": "3D assets",
+              "width": 93
+            }
+          ],
+          "pageWidth": 345,
+          "viewport": [
+            360,
+            800
+          ]
+        },
+        {
+          "contentWidth": 375,
+          "heading": "A little inspiration.A lot of possibility.",
+          "overflow": [
+            {
+              "class": "chip ",
+              "tag": "BUTTON",
+              "text": "Pooja Room",
+              "width": 105
+            },
+            {
+              "class": "chip ",
+              "tag": "BUTTON",
+              "text": "3D assets",
+              "width": 93
+            }
+          ],
+          "pageWidth": 375,
+          "viewport": [
+            390,
+            844
+          ]
+        },
+        {
+          "contentWidth": 415,
+          "heading": "A little inspiration.A lot of possibility.",
+          "overflow": [
+            {
+              "class": "chip ",
+              "tag": "BUTTON",
+              "text": "Pooja Room",
+              "width": 105
+            }
+          ],
+          "pageWidth": 415,
+          "viewport": [
+            430,
+            932
+          ]
+        },
+        {
+          "contentWidth": 585,
+          "heading": "A little inspiration.A lot of possibility.",
+          "overflow": [],
+          "pageWidth": 585,
+          "viewport": [
+            600,
+            800
+          ]
+        },
+        {
+          "contentWidth": 586,
+          "heading": "A little inspiration.A lot of possibility.",
+          "overflow": [],
+          "pageWidth": 586,
+          "viewport": [
+            601,
+            800
+          ]
+        },
+        {
+          "contentWidth": 753,
+          "heading": "A little inspiration.A lot of possibility.",
+          "overflow": [],
+          "pageWidth": 753,
+          "viewport": [
+            768,
+            1024
+          ]
+        },
+        {
+          "contentWidth": 805,
+          "heading": "A little inspiration.A lot of possibility.",
+          "overflow": [],
+          "pageWidth": 805,
+          "viewport": [
+            820,
+            600
+          ]
+        },
+        {
+          "contentWidth": 829,
+          "heading": "A little inspiration.A lot of possibility.",
+          "overflow": [],
+          "pageWidth": 829,
+          "viewport": [
+            844,
+            390
+          ]
+        },
+        {
+          "contentWidth": 1009,
+          "heading": "A little inspiration.A lot of possibility.",
+          "overflow": [],
+          "pageWidth": 1009,
+          "viewport": [
+            1024,
+            768
+          ]
+        },
+        {
+          "contentWidth": 1425,
+          "heading": "A little inspiration.A lot of possibility.",
+          "overflow": [],
+          "pageWidth": 1425,
+          "viewport": [
+            1440,
+            900
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Materials",
+      "checks": [
+        {
+          "contentWidth": 305,
+          "heading": "The details makethe difference.",
+          "overflow": [
+            {
+              "class": "chip ",
+              "tag": "BUTTON",
+              "text": "Top · Premium",
+              "width": 119
+            }
+          ],
+          "pageWidth": 305,
+          "viewport": [
+            320,
+            568
+          ]
+        },
+        {
+          "contentWidth": 345,
+          "heading": "The details makethe difference.",
+          "overflow": [
+            {
+              "class": "chip ",
+              "tag": "BUTTON",
+              "text": "Top · Premium",
+              "width": 119
+            }
+          ],
+          "pageWidth": 345,
+          "viewport": [
+            360,
+            800
+          ]
+        },
+        {
+          "contentWidth": 375,
+          "heading": "The details makethe difference.",
+          "overflow": [
+            {
+              "class": "chip ",
+              "tag": "BUTTON",
+              "text": "Top · Premium",
+              "width": 119
+            }
+          ],
+          "pageWidth": 375,
+          "viewport": [
+            390,
+            844
+          ]
+        },
+        {
+          "contentWidth": 415,
+          "heading": "The details makethe difference.",
+          "overflow": [],
+          "pageWidth": 415,
+          "viewport": [
+            430,
+            932
+          ]
+        },
+        {
+          "contentWidth": 585,
+          "heading": "The details makethe difference.",
+          "overflow": [],
+          "pageWidth": 585,
+          "viewport": [
+            600,
+            800
+          ]
+        },
+        {
+          "contentWidth": 586,
+          "heading": "The details makethe difference.",
+          "overflow": [],
+          "pageWidth": 586,
+          "viewport": [
+            601,
+            800
+          ]
+        },
+        {
+          "contentWidth": 768,
+          "heading": "The details makethe difference.",
+          "overflow": [],
+          "pageWidth": 768,
+          "viewport": [
+            768,
+            1024
+          ]
+        },
+        {
+          "contentWidth": 805,
+          "heading": "The details makethe difference.",
+          "overflow": [],
+          "pageWidth": 805,
+          "viewport": [
+            820,
+            600
+          ]
+        },
+        {
+          "contentWidth": 829,
+          "heading": "The details makethe difference.",
+          "overflow": [],
+          "pageWidth": 829,
+          "viewport": [
+            844,
+            390
+          ]
+        },
+        {
+          "contentWidth": 1009,
+          "heading": "The details makethe difference.",
+          "overflow": [],
+          "pageWidth": 1009,
+          "viewport": [
+            1024,
+            768
+          ]
+        },
+        {
+          "contentWidth": 1425,
+          "heading": "The details makethe difference.",
+          "overflow": [],
+          "pageWidth": 1425,
+          "viewport": [
+            1440,
+            900
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Project enquiry",
+      "checks": [
+        {
+          "contentWidth": 305,
+          "heading": "Start a Project",
+          "overflow": [],
+          "pageWidth": 305,
+          "viewport": [
+            320,
+            568
+          ]
+        },
+        {
+          "contentWidth": 345,
+          "heading": "Start a Project",
+          "overflow": [],
+          "pageWidth": 345,
+          "viewport": [
+            360,
+            800
+          ]
+        },
+        {
+          "contentWidth": 375,
+          "heading": "Start a Project",
+          "overflow": [],
+          "pageWidth": 375,
+          "viewport": [
+            390,
+            844
+          ]
+        },
+        {
+          "contentWidth": 415,
+          "heading": "Start a Project",
+          "overflow": [],
+          "pageWidth": 415,
+          "viewport": [
+            430,
+            932
+          ]
+        },
+        {
+          "contentWidth": 585,
+          "heading": "Start a Project",
+          "overflow": [],
+          "pageWidth": 585,
+          "viewport": [
+            600,
+            800
+          ]
+        },
+        {
+          "contentWidth": 586,
+          "heading": "Start a Project",
+          "overflow": [],
+          "pageWidth": 586,
+          "viewport": [
+            601,
+            800
+          ]
+        },
+        {
+          "contentWidth": 768,
+          "heading": "Start a Project",
+          "overflow": [],
+          "pageWidth": 768,
+          "viewport": [
+            768,
+            1024
+          ]
+        },
+        {
+          "contentWidth": 805,
+          "heading": "Start a Project",
+          "overflow": [],
+          "pageWidth": 805,
+          "viewport": [
+            820,
+            600
+          ]
+        },
+        {
+          "contentWidth": 829,
+          "heading": "Start a Project",
+          "overflow": [],
+          "pageWidth": 829,
+          "viewport": [
+            844,
+            390
+          ]
+        },
+        {
+          "contentWidth": 1009,
+          "heading": "Start a Project",
+          "overflow": [],
+          "pageWidth": 1009,
+          "viewport": [
+            1024,
+            768
+          ]
+        },
+        {
+          "contentWidth": 1425,
+          "heading": "Start a Project",
+          "overflow": [],
+          "pageWidth": 1425,
+          "viewport": [
+            1440,
+            900
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Client care",
+      "checks": [
+        {
+          "contentWidth": 305,
+          "heading": "A little care.A lasting difference.",
+          "overflow": [],
+          "pageWidth": 305,
+          "viewport": [
+            320,
+            568
+          ]
+        },
+        {
+          "contentWidth": 345,
+          "heading": "A little care.A lasting difference.",
+          "overflow": [],
+          "pageWidth": 345,
+          "viewport": [
+            360,
+            800
+          ]
+        },
+        {
+          "contentWidth": 375,
+          "heading": "A little care.A lasting difference.",
+          "overflow": [],
+          "pageWidth": 375,
+          "viewport": [
+            390,
+            844
+          ]
+        },
+        {
+          "contentWidth": 415,
+          "heading": "A little care.A lasting difference.",
+          "overflow": [],
+          "pageWidth": 415,
+          "viewport": [
+            430,
+            932
+          ]
+        },
+        {
+          "contentWidth": 585,
+          "heading": "A little care.A lasting difference.",
+          "overflow": [],
+          "pageWidth": 585,
+          "viewport": [
+            600,
+            800
+          ]
+        },
+        {
+          "contentWidth": 586,
+          "heading": "A little care.A lasting difference.",
+          "overflow": [],
+          "pageWidth": 586,
+          "viewport": [
+            601,
+            800
+          ]
+        },
+        {
+          "contentWidth": 753,
+          "heading": "A little care.A lasting difference.",
+          "overflow": [],
+          "pageWidth": 753,
+          "viewport": [
+            768,
+            1024
+          ]
+        },
+        {
+          "contentWidth": 805,
+          "heading": "A little care.A lasting difference.",
+          "overflow": [],
+          "pageWidth": 805,
+          "viewport": [
+            820,
+            600
+          ]
+        },
+        {
+          "contentWidth": 829,
+          "heading": "A little care.A lasting difference.",
+          "overflow": [],
+          "pageWidth": 829,
+          "viewport": [
+            844,
+            390
+          ]
+        },
+        {
+          "contentWidth": 1009,
+          "heading": "A little care.A lasting difference.",
+          "overflow": [],
+          "pageWidth": 1009,
+          "viewport": [
+            1024,
+            768
+          ]
+        },
+        {
+          "contentWidth": 1425,
+          "heading": "A little care.A lasting difference.",
+          "overflow": [],
+          "pageWidth": 1425,
+          "viewport": [
+            1440,
+            900
+          ]
+        }
+      ]
+    }
+  ],
+  "viewer": [
+    {
+      "size": [
+        320,
+        568
+      ],
+      "dialogs": [
+        {
+          "box": [
+            0,
+            0,
+            320,
+            568
+          ],
+          "client": 320,
+          "overflow": [],
+          "scroll": 320,
+          "title": "140-JP 📞-7305341479"
+        }
+      ],
+      "metrics": {
+        "stage": [
+          320,
+          355
+        ],
+        "thumbs": [
+          [
+            41,
+            49
+          ],
+          [
+            41,
+            49
+          ],
+          [
+            41,
+            49
+          ],
+          [
+            41,
+            49
+          ],
+          [
+            41,
+            49
+          ],
+          [
+            41,
+            49
+          ]
+        ]
+      }
+    },
+    {
+      "size": [
+        360,
+        800
+      ],
+      "dialogs": [
+        {
+          "box": [
+            0,
+            0,
+            360,
+            800
+          ],
+          "client": 360,
+          "overflow": [],
+          "scroll": 360,
+          "title": "140-JP 📞-7305341479"
+        }
+      ],
+      "metrics": {
+        "stage": [
+          360,
+          587
+        ],
+        "thumbs": [
+          [
+            47,
+            49
+          ],
+          [
+            47,
+            49
+          ],
+          [
+            47,
+            49
+          ],
+          [
+            47,
+            49
+          ],
+          [
+            47,
+            49
+          ],
+          [
+            47,
+            49
+          ]
+        ]
+      }
+    },
+    {
+      "size": [
+        390,
+        844
+      ],
+      "dialogs": [
+        {
+          "box": [
+            0,
+            0,
+            390,
+            844
+          ],
+          "client": 390,
+          "overflow": [],
+          "scroll": 390,
+          "title": "140-JP 📞-7305341479"
+        }
+      ],
+      "metrics": {
+        "stage": [
+          390,
+          631
+        ],
+        "thumbs": [
+          [
+            52,
+            49
+          ],
+          [
+            52,
+            49
+          ],
+          [
+            52,
+            49
+          ],
+          [
+            52,
+            49
+          ],
+          [
+            52,
+            49
+          ],
+          [
+            52,
+            49
+          ]
+        ]
+      }
+    },
+    {
+      "size": [
+        430,
+        932
+      ],
+      "dialogs": [
+        {
+          "box": [
+            0,
+            0,
+            430,
+            932
+          ],
+          "client": 430,
+          "overflow": [],
+          "scroll": 430,
+          "title": "140-JP 📞-7305341479"
+        }
+      ],
+      "metrics": {
+        "stage": [
+          430,
+          719
+        ],
+        "thumbs": [
+          [
+            59,
+            49
+          ],
+          [
+            59,
+            49
+          ],
+          [
+            59,
+            49
+          ],
+          [
+            59,
+            49
+          ],
+          [
+            59,
+            49
+          ],
+          [
+            59,
+            49
+          ]
+        ]
+      }
+    },
+    {
+      "size": [
+        600,
+        800
+      ],
+      "dialogs": [
+        {
+          "box": [
+            0,
+            0,
+            600,
+            800
+          ],
+          "client": 600,
+          "overflow": [],
+          "scroll": 600,
+          "title": "140-JP 📞-7305341479"
+        }
+      ],
+      "metrics": {
+        "stage": [
+          600,
+          587
+        ],
+        "thumbs": [
+          [
+            68,
+            49
+          ],
+          [
+            68,
+            49
+          ],
+          [
+            68,
+            49
+          ],
+          [
+            68,
+            49
+          ],
+          [
+            68,
+            49
+          ],
+          [
+            68,
+            49
+          ]
+        ]
+      }
+    },
+    {
+      "size": [
+        601,
+        800
+      ],
+      "dialogs": [
+        {
+          "box": [
+            12,
+            24,
+            577,
+            752
+          ],
+          "client": 577,
+          "overflow": [],
+          "scroll": 577,
+          "title": "140-JP 📞-7305341479"
+        }
+      ],
+      "metrics": {
+        "stage": [
+          577,
+          537
+        ],
+        "thumbs": [
+          [
+            68,
+            49
+          ],
+          [
+            68,
+            49
+          ],
+          [
+            68,
+            49
+          ],
+          [
+            68,
+            49
+          ],
+          [
+            68,
+            49
+          ],
+          [
+            68,
+            49
+          ]
+        ]
+      }
+    },
+    {
+      "size": [
+        768,
+        1024
+      ],
+      "dialogs": [
+        {
+          "box": [
+            15,
+            87,
+            737,
+            850
+          ],
+          "client": 737,
+          "overflow": [],
+          "scroll": 737,
+          "title": "140-JP 📞-7305341479"
+        }
+      ],
+      "metrics": {
+        "stage": [
+          737,
+          635
+        ],
+        "thumbs": [
+          [
+            68,
+            49
+          ],
+          [
+            68,
+            49
+          ],
+          [
+            68,
+            49
+          ],
+          [
+            68,
+            49
+          ],
+          [
+            68,
+            49
+          ],
+          [
+            68,
+            49
+          ]
+        ]
+      }
+    },
+    {
+      "size": [
+        820,
+        600
+      ],
+      "dialogs": [
+        {
+          "box": [
+            16,
+            18,
+            787,
+            564
+          ],
+          "client": 787,
+          "overflow": [],
+          "scroll": 787,
+          "title": "140-JP 📞-7305341479"
+        }
+      ],
+      "metrics": {
+        "stage": [
+          787,
+          349
+        ],
+        "thumbs": [
+          [
+            68,
+            49
+          ],
+          [
+            68,
+            49
+          ],
+          [
+            68,
+            49
+          ],
+          [
+            68,
+            49
+          ],
+          [
+            68,
+            49
+          ],
+          [
+            68,
+            49
+          ]
+        ]
+      }
+    },
+    {
+      "size": [
+        844,
+        390
+      ],
+      "dialogs": [
+        {
+          "box": [
+            17,
+            12,
+            810,
+            367
+          ],
+          "client": 810,
+          "overflow": [],
+          "scroll": 810,
+          "title": "140-JP 📞-7305341479"
+        }
+      ],
+      "metrics": {
+        "stage": [
+          810,
+          152
+        ],
+        "thumbs": [
+          [
+            68,
+            49
+          ],
+          [
+            68,
+            49
+          ],
+          [
+            68,
+            49
+          ],
+          [
+            68,
+            49
+          ],
+          [
+            68,
+            49
+          ],
+          [
+            68,
+            49
+          ]
+        ]
+      }
+    },
+    {
+      "size": [
+        1024,
+        768
+      ],
+      "dialogs": [
+        {
+          "box": [
+            20,
+            23,
+            983,
+            722
+          ],
+          "client": 983,
+          "overflow": [],
+          "scroll": 983,
+          "title": "140-JP 📞-7305341479"
+        }
+      ],
+      "metrics": {
+        "stage": [
+          983,
+          507
+        ],
+        "thumbs": [
+          [
+            68,
+            49
+          ],
+          [
+            68,
+            49
+          ],
+          [
+            68,
+            49
+          ],
+          [
+            68,
+            49
+          ],
+          [
+            68,
+            49
+          ],
+          [
+            68,
+            49
+          ]
+        ]
+      }
+    },
+    {
+      "size": [
+        1440,
+        900
+      ],
+      "dialogs": [
+        {
+          "box": [
+            145,
+            27,
+            1150,
+            846
+          ],
+          "client": 1150,
+          "overflow": [],
+          "scroll": 1150,
+          "title": "140-JP 📞-7305341479"
+        }
+      ],
+      "metrics": {
+        "stage": [
+          1150,
+          631
+        ],
+        "thumbs": [
+          [
+            68,
+            49
+          ],
+          [
+            68,
+            49
+          ],
+          [
+            68,
+            49
+          ],
+          [
+            68,
+            49
+          ],
+          [
+            68,
+            49
+          ],
+          [
+            68,
+            49
+          ]
+        ]
+      }
+    }
+  ]
+}

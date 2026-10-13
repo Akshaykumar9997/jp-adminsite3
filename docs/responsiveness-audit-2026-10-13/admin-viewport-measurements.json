@@ -1,0 +1,1032 @@
+[
+  {
+    "name": "Overview",
+    "path": "/",
+    "checks": [
+      {
+        "contentWidth": 305,
+        "heading": "Overview",
+        "overflow": [
+          {
+            "class": "page gallery-page",
+            "tag": "DIV",
+            "text": "OverviewRoom-based works and the content",
+            "width": 320
+          }
+        ],
+        "pageWidth": 320,
+        "viewport": [
+          320,
+          568
+        ]
+      },
+      {
+        "contentWidth": 345,
+        "heading": "Overview",
+        "overflow": [],
+        "pageWidth": 345,
+        "viewport": [
+          360,
+          800
+        ]
+      },
+      {
+        "contentWidth": 375,
+        "heading": "Overview",
+        "overflow": [],
+        "pageWidth": 375,
+        "viewport": [
+          390,
+          844
+        ]
+      },
+      {
+        "contentWidth": 415,
+        "heading": "Overview",
+        "overflow": [],
+        "pageWidth": 415,
+        "viewport": [
+          430,
+          932
+        ]
+      },
+      {
+        "contentWidth": 768,
+        "heading": "Overview",
+        "overflow": [],
+        "pageWidth": 768,
+        "viewport": [
+          768,
+          1024
+        ]
+      },
+      {
+        "contentWidth": 805,
+        "heading": "Overview",
+        "overflow": [],
+        "pageWidth": 805,
+        "viewport": [
+          820,
+          600
+        ]
+      },
+      {
+        "contentWidth": 829,
+        "heading": "Overview",
+        "overflow": [],
+        "pageWidth": 829,
+        "viewport": [
+          844,
+          390
+        ]
+      },
+      {
+        "contentWidth": 1024,
+        "heading": "Overview",
+        "overflow": [],
+        "pageWidth": 1024,
+        "viewport": [
+          1024,
+          768
+        ]
+      },
+      {
+        "contentWidth": 1440,
+        "heading": "Overview",
+        "overflow": [],
+        "pageWidth": 1440,
+        "viewport": [
+          1440,
+          900
+        ]
+      }
+    ]
+  },
+  {
+    "name": "Leads",
+    "path": "/leads",
+    "checks": [
+      {
+        "contentWidth": 305,
+        "heading": "Leads",
+        "overflow": [
+          {
+            "class": "page cms-page crm-page",
+            "tag": "DIV",
+            "text": "LeadsShared with the app. View and expor",
+            "width": 320
+          }
+        ],
+        "pageWidth": 320,
+        "viewport": [
+          320,
+          568
+        ]
+      },
+      {
+        "contentWidth": 345,
+        "heading": "Leads",
+        "overflow": [],
+        "pageWidth": 345,
+        "viewport": [
+          360,
+          800
+        ]
+      },
+      {
+        "contentWidth": 375,
+        "heading": "Leads",
+        "overflow": [],
+        "pageWidth": 375,
+        "viewport": [
+          390,
+          844
+        ]
+      },
+      {
+        "contentWidth": 415,
+        "heading": "Leads",
+        "overflow": [],
+        "pageWidth": 415,
+        "viewport": [
+          430,
+          932
+        ]
+      },
+      {
+        "contentWidth": 768,
+        "heading": "Leads",
+        "overflow": [],
+        "pageWidth": 768,
+        "viewport": [
+          768,
+          1024
+        ]
+      },
+      {
+        "contentWidth": 805,
+        "heading": "Leads",
+        "overflow": [],
+        "pageWidth": 805,
+        "viewport": [
+          820,
+          600
+        ]
+      },
+      {
+        "contentWidth": 829,
+        "heading": "Leads",
+        "overflow": [],
+        "pageWidth": 829,
+        "viewport": [
+          844,
+          390
+        ]
+      },
+      {
+        "contentWidth": 1009,
+        "heading": "Leads",
+        "overflow": [],
+        "pageWidth": 1009,
+        "viewport": [
+          1024,
+          768
+        ]
+      },
+      {
+        "contentWidth": 1440,
+        "heading": "Leads",
+        "overflow": [],
+        "pageWidth": 1440,
+        "viewport": [
+          1440,
+          900
+        ]
+      }
+    ]
+  },
+  {
+    "name": "Visitor Logs",
+    "path": "/visitor-logs",
+    "checks": [
+      {
+        "contentWidth": 305,
+        "heading": "Visitor Logs",
+        "overflow": [
+          {
+            "class": "page cms-page visitor-logs",
+            "tag": "DIV",
+            "text": "Visitor LogsClient site 2 welcome entrie",
+            "width": 320
+          }
+        ],
+        "pageWidth": 320,
+        "viewport": [
+          320,
+          568
+        ]
+      },
+      {
+        "contentWidth": 345,
+        "heading": "Visitor Logs",
+        "overflow": [],
+        "pageWidth": 345,
+        "viewport": [
+          360,
+          800
+        ]
+      },
+      {
+        "contentWidth": 375,
+        "heading": "Visitor Logs",
+        "overflow": [],
+        "pageWidth": 375,
+        "viewport": [
+          390,
+          844
+        ]
+      },
+      {
+        "contentWidth": 415,
+        "heading": "Visitor Logs",
+        "overflow": [],
+        "pageWidth": 415,
+        "viewport": [
+          430,
+          932
+        ]
+      },
+      {
+        "contentWidth": 768,
+        "heading": "Visitor Logs",
+        "overflow": [],
+        "pageWidth": 768,
+        "viewport": [
+          768,
+          1024
+        ]
+      },
+      {
+        "contentWidth": 805,
+        "heading": "Visitor Logs",
+        "overflow": [],
+        "pageWidth": 805,
+        "viewport": [
+          820,
+          600
+        ]
+      },
+      {
+        "contentWidth": 829,
+        "heading": "Visitor Logs",
+        "overflow": [],
+        "pageWidth": 829,
+        "viewport": [
+          844,
+          390
+        ]
+      },
+      {
+        "contentWidth": 1009,
+        "heading": "Visitor Logs",
+        "overflow": [],
+        "pageWidth": 1009,
+        "viewport": [
+          1024,
+          768
+        ]
+      },
+      {
+        "contentWidth": 1440,
+        "heading": "Visitor Logs",
+        "overflow": [],
+        "pageWidth": 1440,
+        "viewport": [
+          1440,
+          900
+        ]
+      }
+    ]
+  },
+  {
+    "name": "Customer Support",
+    "path": "/customer-support",
+    "checks": [
+      {
+        "contentWidth": 305,
+        "heading": "Customer Support",
+        "overflow": [
+          {
+            "class": "page cms-page crm-page",
+            "tag": "DIV",
+            "text": "Customer SupportView and export customer",
+            "width": 320
+          }
+        ],
+        "pageWidth": 320,
+        "viewport": [
+          320,
+          568
+        ]
+      },
+      {
+        "contentWidth": 345,
+        "heading": "Customer Support",
+        "overflow": [],
+        "pageWidth": 345,
+        "viewport": [
+          360,
+          800
+        ]
+      },
+      {
+        "contentWidth": 375,
+        "heading": "Customer Support",
+        "overflow": [],
+        "pageWidth": 375,
+        "viewport": [
+          390,
+          844
+        ]
+      },
+      {
+        "contentWidth": 415,
+        "heading": "Customer Support",
+        "overflow": [],
+        "pageWidth": 415,
+        "viewport": [
+          430,
+          932
+        ]
+      },
+      {
+        "contentWidth": 768,
+        "heading": "Customer Support",
+        "overflow": [],
+        "pageWidth": 768,
+        "viewport": [
+          768,
+          1024
+        ]
+      },
+      {
+        "contentWidth": 805,
+        "heading": "Customer Support",
+        "overflow": [],
+        "pageWidth": 805,
+        "viewport": [
+          820,
+          600
+        ]
+      },
+      {
+        "contentWidth": 829,
+        "heading": "Customer Support",
+        "overflow": [],
+        "pageWidth": 829,
+        "viewport": [
+          844,
+          390
+        ]
+      },
+      {
+        "contentWidth": 1009,
+        "heading": "Customer Support",
+        "overflow": [],
+        "pageWidth": 1009,
+        "viewport": [
+          1024,
+          768
+        ]
+      },
+      {
+        "contentWidth": 1440,
+        "heading": "Customer Support",
+        "overflow": [],
+        "pageWidth": 1440,
+        "viewport": [
+          1440,
+          900
+        ]
+      }
+    ]
+  },
+  {
+    "name": "Rooms",
+    "path": "/rooms",
+    "checks": [
+      {
+        "contentWidth": 305,
+        "heading": "Rooms",
+        "overflow": [
+          {
+            "class": "page cms-page room-workspace gallery-page album-page   ",
+            "tag": "DIV",
+            "text": "RoomsChoose a room to manage its work an",
+            "width": 320
+          }
+        ],
+        "pageWidth": 320,
+        "viewport": [
+          320,
+          568
+        ]
+      },
+      {
+        "contentWidth": 345,
+        "heading": "Rooms",
+        "overflow": [],
+        "pageWidth": 345,
+        "viewport": [
+          360,
+          800
+        ]
+      },
+      {
+        "contentWidth": 375,
+        "heading": "Rooms",
+        "overflow": [],
+        "pageWidth": 375,
+        "viewport": [
+          390,
+          844
+        ]
+      },
+      {
+        "contentWidth": 415,
+        "heading": "Rooms",
+        "overflow": [],
+        "pageWidth": 415,
+        "viewport": [
+          430,
+          932
+        ]
+      },
+      {
+        "contentWidth": 753,
+        "heading": "Rooms",
+        "overflow": [],
+        "pageWidth": 753,
+        "viewport": [
+          768,
+          1024
+        ]
+      },
+      {
+        "contentWidth": 805,
+        "heading": "Rooms",
+        "overflow": [],
+        "pageWidth": 805,
+        "viewport": [
+          820,
+          600
+        ]
+      },
+      {
+        "contentWidth": 829,
+        "heading": "Rooms",
+        "overflow": [],
+        "pageWidth": 829,
+        "viewport": [
+          844,
+          390
+        ]
+      },
+      {
+        "contentWidth": 1009,
+        "heading": "Rooms",
+        "overflow": [],
+        "pageWidth": 1009,
+        "viewport": [
+          1024,
+          768
+        ]
+      },
+      {
+        "contentWidth": 1440,
+        "heading": "Rooms",
+        "overflow": [],
+        "pageWidth": 1440,
+        "viewport": [
+          1440,
+          900
+        ]
+      }
+    ]
+  },
+  {
+    "name": "Media Library",
+    "path": "/media",
+    "checks": [
+      {
+        "contentWidth": 305,
+        "heading": "Media Library",
+        "overflow": [
+          {
+            "class": "page cms-page gallery-page media-library ",
+            "tag": "DIV",
+            "text": "YOUR COLLECTIONMedia Library0 files · Re",
+            "width": 320
+          }
+        ],
+        "pageWidth": 320,
+        "viewport": [
+          320,
+          568
+        ]
+      },
+      {
+        "contentWidth": 345,
+        "heading": "Media Library",
+        "overflow": [],
+        "pageWidth": 345,
+        "viewport": [
+          360,
+          800
+        ]
+      },
+      {
+        "contentWidth": 375,
+        "heading": "Media Library",
+        "overflow": [],
+        "pageWidth": 375,
+        "viewport": [
+          390,
+          844
+        ]
+      },
+      {
+        "contentWidth": 415,
+        "heading": "Media Library",
+        "overflow": [],
+        "pageWidth": 415,
+        "viewport": [
+          430,
+          932
+        ]
+      },
+      {
+        "contentWidth": 753,
+        "heading": "Media Library",
+        "overflow": [],
+        "pageWidth": 753,
+        "viewport": [
+          768,
+          1024
+        ]
+      },
+      {
+        "contentWidth": 805,
+        "heading": "Media Library",
+        "overflow": [],
+        "pageWidth": 805,
+        "viewport": [
+          820,
+          600
+        ]
+      },
+      {
+        "contentWidth": 829,
+        "heading": "Media Library",
+        "overflow": [],
+        "pageWidth": 829,
+        "viewport": [
+          844,
+          390
+        ]
+      },
+      {
+        "contentWidth": 1009,
+        "heading": "Media Library",
+        "overflow": [],
+        "pageWidth": 1009,
+        "viewport": [
+          1024,
+          768
+        ]
+      },
+      {
+        "contentWidth": 1440,
+        "heading": "Media Library",
+        "overflow": [],
+        "pageWidth": 1440,
+        "viewport": [
+          1440,
+          900
+        ]
+      }
+    ]
+  },
+  {
+    "name": "Materials",
+    "path": "/materials",
+    "checks": [
+      {
+        "contentWidth": 305,
+        "heading": "Materials",
+        "overflow": [
+          {
+            "class": "page cms-page gallery-page album-page  ",
+            "tag": "DIV",
+            "text": "MATERIAL COLLECTIONSMaterials0 albums · ",
+            "width": 320
+          }
+        ],
+        "pageWidth": 320,
+        "viewport": [
+          320,
+          568
+        ]
+      },
+      {
+        "contentWidth": 345,
+        "heading": "Materials",
+        "overflow": [],
+        "pageWidth": 345,
+        "viewport": [
+          360,
+          800
+        ]
+      },
+      {
+        "contentWidth": 375,
+        "heading": "Materials",
+        "overflow": [],
+        "pageWidth": 375,
+        "viewport": [
+          390,
+          844
+        ]
+      },
+      {
+        "contentWidth": 415,
+        "heading": "Materials",
+        "overflow": [],
+        "pageWidth": 415,
+        "viewport": [
+          430,
+          932
+        ]
+      },
+      {
+        "contentWidth": 753,
+        "heading": "Materials",
+        "overflow": [],
+        "pageWidth": 753,
+        "viewport": [
+          768,
+          1024
+        ]
+      },
+      {
+        "contentWidth": 805,
+        "heading": "Materials",
+        "overflow": [],
+        "pageWidth": 805,
+        "viewport": [
+          820,
+          600
+        ]
+      },
+      {
+        "contentWidth": 829,
+        "heading": "Materials",
+        "overflow": [],
+        "pageWidth": 829,
+        "viewport": [
+          844,
+          390
+        ]
+      },
+      {
+        "contentWidth": 1009,
+        "heading": "Materials",
+        "overflow": [],
+        "pageWidth": 1009,
+        "viewport": [
+          1024,
+          768
+        ]
+      },
+      {
+        "contentWidth": 1440,
+        "heading": "Materials",
+        "overflow": [],
+        "pageWidth": 1440,
+        "viewport": [
+          1440,
+          900
+        ]
+      }
+    ]
+  },
+  {
+    "name": "Partners",
+    "path": "/partners",
+    "checks": [
+      {
+        "contentWidth": 305,
+        "heading": "Partners",
+        "overflow": [
+          {
+            "class": "page cms-page gallery-page album-page  ",
+            "tag": "DIV",
+            "text": "YOUR COLLABORATIONSPartners0 partners · ",
+            "width": 320
+          }
+        ],
+        "pageWidth": 320,
+        "viewport": [
+          320,
+          568
+        ]
+      },
+      {
+        "contentWidth": 345,
+        "heading": "Partners",
+        "overflow": [],
+        "pageWidth": 345,
+        "viewport": [
+          360,
+          800
+        ]
+      },
+      {
+        "contentWidth": 375,
+        "heading": "Partners",
+        "overflow": [],
+        "pageWidth": 375,
+        "viewport": [
+          390,
+          844
+        ]
+      },
+      {
+        "contentWidth": 415,
+        "heading": "Partners",
+        "overflow": [],
+        "pageWidth": 415,
+        "viewport": [
+          430,
+          932
+        ]
+      },
+      {
+        "contentWidth": 768,
+        "heading": "Partners",
+        "overflow": [],
+        "pageWidth": 768,
+        "viewport": [
+          768,
+          1024
+        ]
+      },
+      {
+        "contentWidth": 805,
+        "heading": "Partners",
+        "overflow": [],
+        "pageWidth": 805,
+        "viewport": [
+          820,
+          600
+        ]
+      },
+      {
+        "contentWidth": 829,
+        "heading": "Partners",
+        "overflow": [],
+        "pageWidth": 829,
+        "viewport": [
+          844,
+          390
+        ]
+      },
+      {
+        "contentWidth": 1009,
+        "heading": "Partners",
+        "overflow": [],
+        "pageWidth": 1009,
+        "viewport": [
+          1024,
+          768
+        ]
+      },
+      {
+        "contentWidth": 1440,
+        "heading": "Partners",
+        "overflow": [],
+        "pageWidth": 1440,
+        "viewport": [
+          1440,
+          900
+        ]
+      }
+    ]
+  },
+  {
+    "name": "Trash",
+    "path": "/trash",
+    "checks": [
+      {
+        "contentWidth": 305,
+        "heading": "Trash",
+        "overflow": [
+          {
+            "class": "page cms-page gallery-page ",
+            "tag": "DIV",
+            "text": "RECOVER YOUR ITEMSTrashItems stay here u",
+            "width": 320
+          }
+        ],
+        "pageWidth": 320,
+        "viewport": [
+          320,
+          568
+        ]
+      },
+      {
+        "contentWidth": 345,
+        "heading": "Trash",
+        "overflow": [],
+        "pageWidth": 345,
+        "viewport": [
+          360,
+          800
+        ]
+      },
+      {
+        "contentWidth": 375,
+        "heading": "Trash",
+        "overflow": [],
+        "pageWidth": 375,
+        "viewport": [
+          390,
+          844
+        ]
+      },
+      {
+        "contentWidth": 415,
+        "heading": "Trash",
+        "overflow": [],
+        "pageWidth": 415,
+        "viewport": [
+          430,
+          932
+        ]
+      },
+      {
+        "contentWidth": 768,
+        "heading": "Trash",
+        "overflow": [],
+        "pageWidth": 768,
+        "viewport": [
+          768,
+          1024
+        ]
+      },
+      {
+        "contentWidth": 805,
+        "heading": "Trash",
+        "overflow": [],
+        "pageWidth": 805,
+        "viewport": [
+          820,
+          600
+        ]
+      },
+      {
+        "contentWidth": 829,
+        "heading": "Trash",
+        "overflow": [],
+        "pageWidth": 829,
+        "viewport": [
+          844,
+          390
+        ]
+      },
+      {
+        "contentWidth": 1009,
+        "heading": "Trash",
+        "overflow": [],
+        "pageWidth": 1009,
+        "viewport": [
+          1024,
+          768
+        ]
+      },
+      {
+        "contentWidth": 1440,
+        "heading": "Trash",
+        "overflow": [],
+        "pageWidth": 1440,
+        "viewport": [
+          1440,
+          900
+        ]
+      }
+    ]
+  },
+  {
+    "name": "Manage Admins",
+    "path": "/admins",
+    "checks": [
+      {
+        "contentWidth": 305,
+        "heading": "Manage Admins",
+        "overflow": [
+          {
+            "class": "page cms-page admins-page",
+            "tag": "DIV",
+            "text": "SHARED ADMINISTRATOR ACCESSManage Admins",
+            "width": 320
+          }
+        ],
+        "pageWidth": 320,
+        "viewport": [
+          320,
+          568
+        ]
+      },
+      {
+        "contentWidth": 345,
+        "heading": "Manage Admins",
+        "overflow": [],
+        "pageWidth": 345,
+        "viewport": [
+          360,
+          800
+        ]
+      },
+      {
+        "contentWidth": 375,
+        "heading": "Manage Admins",
+        "overflow": [],
+        "pageWidth": 375,
+        "viewport": [
+          390,
+          844
+        ]
+      },
+      {
+        "contentWidth": 415,
+        "heading": "Manage Admins",
+        "overflow": [],
+        "pageWidth": 415,
+        "viewport": [
+          430,
+          932
+        ]
+      },
+      {
+        "contentWidth": 768,
+        "heading": "Manage Admins",
+        "overflow": [],
+        "pageWidth": 768,
+        "viewport": [
+          768,
+          1024
+        ]
+      },
+      {
+        "contentWidth": 805,
+        "heading": "Manage Admins",
+        "overflow": [],
+        "pageWidth": 805,
+        "viewport": [
+          820,
+          600
+        ]
+      },
+      {
+        "contentWidth": 829,
+        "heading": "Manage Admins",
+        "overflow": [],
+        "pageWidth": 829,
+        "viewport": [
+          844,
+          390
+        ]
+      },
+      {
+        "contentWidth": 1024,
+        "heading": "Manage Admins",
+        "overflow": [],
+        "pageWidth": 1024,
+        "viewport": [
+          1024,
+          768
+        ]
+      },
+      {
+        "contentWidth": 1440,
+        "heading": "Manage Admins",
+        "overflow": [],
+        "pageWidth": 1440,
+        "viewport": [
+          1440,
+          900
+        ]
+      }
+    ]
+  }
+]
