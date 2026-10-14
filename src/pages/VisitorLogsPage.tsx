@@ -50,7 +50,7 @@ export function VisitorLogsPage() {
         <Button onClick={() => void reload()} disabled={loading}><RefreshCw size={18} /> Refresh</Button>
       </div>
       <div className="crm-filters">
-        <label>Phone number<input type="search" inputMode="tel" placeholder="Enter complete phone number" value={phone} onChange={e => { setPhone(e.target.value); setPage(0) }} /></label>
+        <label>Phone number<input type="search" inputMode="tel" value={phone} onChange={e => { setPhone(e.target.value); setPage(0) }} /></label>
         <label>From date<input type="date" value={from} onChange={e => { setFrom(e.target.value); setPage(0) }} /></label>
         <label>To date<input type="date" value={to} onChange={e => { setTo(e.target.value); setPage(0) }} /></label>
         <span>Dates and times shown in IST</span>

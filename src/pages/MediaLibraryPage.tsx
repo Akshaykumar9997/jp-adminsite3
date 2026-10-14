@@ -121,7 +121,6 @@ export function MediaLibraryPage() {
       <div className="gallery-toolbar">
         <input
           aria-label="Search media"
-          placeholder="Search your files…"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
         />

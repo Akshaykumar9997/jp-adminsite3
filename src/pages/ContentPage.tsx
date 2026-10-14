@@ -177,7 +177,7 @@ export function ContentEditor({
                   value={room}
                   onChange={setRoom}
                   options={[
-                    { value: '', label: 'Choose a room' },
+                    { value: '', label: '' },
                     ...workspace.rooms.map((r) => ({
                       value: r.id,
                       label: r.name,
@@ -294,7 +294,6 @@ export function ContentPage({ kind }: { kind: ContentKind }) {
         <label className="filter-search">
           <input
             aria-label={`Search ${plural[kind]}`}
-            placeholder={`Search ${plural[kind].toLowerCase()}…`}
             value={query}
             onChange={(e) => setQuery(e.target.value)}
           />

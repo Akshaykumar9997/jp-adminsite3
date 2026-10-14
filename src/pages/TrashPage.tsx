@@ -42,7 +42,6 @@ export function TrashPage() {
       <div className="gallery-toolbar">
         <input
           aria-label="Search Trash"
-          placeholder="Search Trash…"
           value={query}
           onChange={(event) => setQuery(event.target.value)}
         />

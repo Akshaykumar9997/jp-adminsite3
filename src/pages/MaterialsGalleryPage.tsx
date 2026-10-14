@@ -110,7 +110,6 @@ export function MaterialsGalleryPage({
       <div className="gallery-toolbar">
         <input
           aria-label={`Search ${title}`}
-          placeholder={`Search ${title.toLowerCase()}…`}
           value={query}
           onChange={(event) => setQuery(event.target.value)}
         />

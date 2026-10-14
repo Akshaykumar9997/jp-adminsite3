@@ -190,7 +190,6 @@ export function RoomsGalleryPage() {
       <div className="gallery-toolbar">
         <input
           aria-label={room ? 'Search room gallery' : 'Search rooms'}
-          placeholder={room ? 'Search title or location…' : 'Search rooms…'}
           value={query}
           onChange={(event) => setQuery(event.target.value)}
         />

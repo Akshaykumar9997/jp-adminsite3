@@ -6,7 +6,7 @@ export const leadColumns = [
   ['latitude', 'Latitude'], ['longitude', 'Longitude'], ['user_id', 'User ID'],
 ]
 export const supportColumns = [
-  ['name', 'Name'], ['phone', 'Phone'], ['city', 'City / Emirate'], ['email', 'Email'],
+  ['name', 'Name'], ['phone', 'Phone'], ['city', 'District'], ['email', 'Email'],
   ['reference', 'Project / Invoice Reference'], ['reason', 'Topic'],
   ['preferred_contact', 'Preferred Contact'], ['message', 'Message'], ['consent', 'Contact Consent'],
   ['created_at', 'Date'], ['id', 'ID'],
